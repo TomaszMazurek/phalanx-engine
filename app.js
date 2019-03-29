@@ -134,9 +134,9 @@ function createLight() {
     scene.add( pointLightHelper1 );
 }
 function createObjects() {
-    texture = new THREE.TextureLoader().load( "textures/wood/wood.jpg" );
-    normalMap = new THREE.TextureLoader().load( "textures/wood/maps/wood1/Normal.png" );
-    roughnessMap = new THREE.TextureLoader().load( "textures/wood/maps/wood1/Roughness.png" );
+    texture = new THREE.TextureLoader().load( "textures/wood/wood1/Base_Color.jpg" );
+    normalMap = new THREE.TextureLoader().load( "textures/wood/wood1/Normal.jpg" );
+    roughnessMap = new THREE.TextureLoader().load( "textures/wood/wood1/Roughness.jpg" );
 
 
     //phong object
@@ -190,11 +190,13 @@ function createObjects() {
     meshNormal.receiveShadow = false;
     scene.add( meshNormal );
 
-    var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
+    //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
+    //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
+    var planeGeometry = new THREE.BoxGeometry(2000, 2000, 10, 100, 100, 5);
     var planeMaterial = new THREE.MeshPhongMaterial( {
         color: 0xffffff,
         side: THREE.DoubleSide,
-        map: new THREE.TextureLoader().load( "textures/others/maps/checker/checker.jpeg",    async function ( map ) {
+        map: new THREE.TextureLoader().load( "textures/wood/wood3/Base_Color.jpg",    async function ( map ) {
             textureMap["checker"][2] = map;
             map.name = "checker";
             map.wrapS = map.wrapT = THREE.RepeatWrapping;
