@@ -18,20 +18,20 @@ var geometry, material, plane, texture,
 
 var textureLoader = new THREE.TextureLoader();
 var textureMap = {
-    wood1: ["textures/wood/maps/wood1/", 0xFFEEB0, undefined, undefined, undefined, undefined, undefined],
-    wood2: ["textures/wood/maps/wood2/", 0xa0522d, undefined, undefined, undefined, undefined, undefined],
-    wood3: ["textures/wood/maps/wood3/", 0xCD8500, undefined, undefined, undefined, undefined, undefined],
-    cobble1: ["textures/cobblestone/maps/cobble1/", 0x92806d, undefined, undefined, undefined, undefined, undefined],
-    cobble2: ["textures/cobblestone/maps/cobble2/", 0x878481, undefined, undefined, undefined, undefined, undefined],
-    cobble3: ["textures/cobblestone/maps/cobble3/", 0x95908c, undefined, undefined, undefined, undefined, undefined],
-    roof1: ["textures/roofing/maps/roof1/", 0xdeaf8a, undefined, undefined, undefined, undefined, undefined],
-    roof2: ["textures/roofing/maps/roof2/", 0xc5976d, undefined, undefined, undefined, undefined, undefined],
-    roof3: ["textures/roofing/maps/roof3/", 0xa37862, undefined, undefined, undefined, undefined, undefined],
-    bricks1: ["textures/bricks/maps/bricks1/", 0xaf7c63, undefined, undefined, undefined, undefined, undefined],
-    bricks2: ["textures/bricks/maps/bricks2/", 0xb4705f, undefined, undefined, undefined, undefined, undefined],
-    bricks3: ["textures/bricks/maps/bricks3/", 0xb18a6f, undefined, undefined, undefined, undefined, undefined],
-    iceTexture: ["textures/others/maps/iceTexture/", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined],
-    checker: ["textures/others/maps/checker", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined]
+    wood1: ["textures/wood/wood1/", 0xFFEEB0, undefined, undefined, undefined, undefined, undefined],
+    wood2: ["textures/wood/wood2/", 0xa0522d, undefined, undefined, undefined, undefined, undefined],
+    wood3: ["textures/wood/wood3/", 0xCD8500, undefined, undefined, undefined, undefined, undefined],
+    cobble1: ["textures/cobblestone/cobble1/", 0x92806d, undefined, undefined, undefined, undefined, undefined],
+    cobble2: ["textures/cobblestone/cobble2/", 0x878481, undefined, undefined, undefined, undefined, undefined],
+    cobble3: ["textures/cobblestone/cobble3/", 0x95908c, undefined, undefined, undefined, undefined, undefined],
+    roof1: ["textures/roofing/roof1/", 0xdeaf8a, undefined, undefined, undefined, undefined, undefined],
+    roof2: ["textures/roofing/roof2/", 0xc5976d, undefined, undefined, undefined, undefined, undefined],
+    roof3: ["textures/roofing/roof3/", 0xa37862, undefined, undefined, undefined, undefined, undefined],
+    bricks1: ["textures/bricks/bricks1/", 0xaf7c63, undefined, undefined, undefined, undefined, undefined],
+    bricks2: ["textures/bricks/bricks2/", 0xb4705f, undefined, undefined, undefined, undefined, undefined],
+    bricks3: ["textures/bricks/bricks3/", 0xb18a6f, undefined, undefined, undefined, undefined, undefined],
+    iceTexture: ["textures/others/iceTexture/", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined],
+    checker: ["textures/others/checker", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined]
 };
 
 function init() {
@@ -240,7 +240,7 @@ async function populateTextureMap(){
         var i = 0;
         var loadTex = async function() {
             var key = keyArray[i];
-            textureLoader.load( textureMap[key][0] + "Base_Color.png",
+            textureLoader.load( textureMap[key][0] + "Base_Color.jpg",
                 async function ( map ) {
                     textureMap[key][2] = map;
                     map.name = key;
@@ -262,7 +262,7 @@ async function populateTextureMap(){
         var i = 0;
         var loadTex = async function() {
             var key = keyArray[i];
-            textureLoader.load( textureMap[key][0] + "Bump.png",
+            textureLoader.load( textureMap[key][0] + "Bump.jpg",
                 async function ( map ) {
                     textureMap[key][3] = map;
                     if (i < keyArray.length - 1) {
@@ -278,7 +278,7 @@ async function populateTextureMap(){
         var i = 0;
         var loadTex = async function() {
             var key = keyArray[i];
-            textureLoader.load( textureMap[key][0] + "Normal.png",
+            textureLoader.load( textureMap[key][0] + "Normal.jpg",
                 async function ( map ) {
                     textureMap[key][4] = map;
                     if (i < keyArray.length - 1) {
@@ -294,7 +294,7 @@ async function populateTextureMap(){
         var i = 0;
         var loadTex = async function() {
             var key = keyArray[i];
-            textureLoader.load( textureMap[key][0] + "Roughness.png",
+            textureLoader.load( textureMap[key][0] + "Roughness.jpg",
                 async function ( map ) {
                     textureMap[key][5] = map;
                     if (i < keyArray.length - 1) {
@@ -310,7 +310,7 @@ async function populateTextureMap(){
         var i = 0;
         var loadTex = async function() {
             var key = keyArray[i];
-            textureLoader.load( textureMap[key][0] + "Ambient_Occlusion.png",
+            textureLoader.load( textureMap[key][0] + "Ambient_Occlusion.jpg",
                 async function ( map ) {
                     textureMap[key][6] = map;
                     if (i < keyArray.length - 1) {
