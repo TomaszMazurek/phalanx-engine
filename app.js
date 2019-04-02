@@ -1,15 +1,15 @@
 var scene, camera, renderer, stats, controls, gui, textureEvent,
     params = {
         speed : 0.001,
-        pointLight1Power: 1.2,
+        pointLight1Power: 0.9,
         pointLight1Shadow: true,
-        pointLight2Power: 1.2,
+        pointLight2Power: 0.9,
         pointLight2Shadow: true,
-        directionalLight: 1.2,
+        directionalLight: 0.9,
         directionalLightShadow: true,
         bumpScale : 1.0,
-        roughness : 0.5,
-        shininess : 0.5,
+        roughness : 1,
+        shininess : 0.0,
         texture: "wood1",
         near : 500,
         far : 25000,
@@ -20,6 +20,7 @@ var geometry, material, plane, texture,
     mesh, phongMaterial, stdMaterial, normalMaterial,
     meshPhong, meshStandard, meshNormal,
     pointLight1, pointLight2, directionalLight,
+    sphere1, sphere2, sphereDir,
     near,far, fov;
 
 
@@ -40,6 +41,9 @@ var textureMap = {
     iceTexture: ["textures/others/iceTexture/", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined],
     checker: ["textures/others/checker", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined]
 };
+var shaderMap =  {
+    wireframe: [undefined, undefined]
+};
 
 function init() {
     createScene();
@@ -57,6 +61,15 @@ function animate() {
 
     stats.begin();
 
+    sphereDir.material.emissiveIntensity = params.directionalLight  > 0.2 ? params.directionalLight + 0.2: 0;
+    sphereDir.material.opacity = params.directionalLight > 0.2 ? 1: 0.5;
+
+    sphere1.material.emissiveIntensity = params.pointLight1Power  > 0.2 ? params.pointLight2Power + 0.2: 0;
+    sphere1.material.opacity = params.pointLight1Power > 0.2 ? 1: 0.5;
+
+    sphere2.material.emissiveIntensity = params.pointLight2Power > 0.2 ? params.pointLight2Power + 0.2: 0;
+    sphere2.material.opacity = params.pointLight2Power > 0.2 ? 1: 0.5;
+
     meshPhong.rotation.x += params.speed;
     meshPhong.rotation.y += params.speed;
     meshPhong.material.bumpScale = params.bumpScale;
@@ -72,26 +85,26 @@ function animate() {
     meshNormal.rotation.x += params.speed;
     meshNormal.rotation.y += params.speed;
 
-    directionalLight.intensity = params.directionalLight;
+    directionalLight.intensity = params.directionalLight > 0.2 ? params.directionalLight: 0;
     directionalLight.castShadow = params.directionalLightShadow;
 
-    directionalLight.shadowCameraNear = params.near;
-    directionalLight.shadowCameraFar = params.far;
-    directionalLight.shadowCameraFov = params.fov;
+    directionalLight.shadow.camera.near = params.near;
+    directionalLight.shadow.camera.far = params.far;
+    directionalLight.shadow.camera.fov = params.fov;
 
-    pointLight1.intensity = params.pointLight1Power;
+    pointLight1.intensity = params.pointLight1Power > 0.2 ? params.pointLight1Power: 0;
     pointLight1.castShadow = params.pointLight1Shadow;
 
-    pointLight1.shadowCameraNear = params.near;
-    pointLight1.shadowCameraFar = params.far;
-    pointLight1.shadowCameraFov = params.fov;
+    pointLight1.shadow.camera.near = params.near;
+    pointLight1.shadow.camera.far = params.far;
+    pointLight1.shadow.camera.fov = params.fov;
 
-    pointLight2.intensity = params.pointLight2Power;
+    pointLight2.intensity = params.pointLight2Power > 0.2 ? params.pointLight2Power: 0;
     pointLight2.castShadow = params.pointLight2Shadow;
 
-    pointLight2.shadowCameraNear = params.near;
-    pointLight2.shadowCameraFar = params.far;
-    pointLight2.shadowCameraFov = params.fov;
+    pointLight2.shadow.camera.near = params.near;
+    pointLight2.shadow.camera.far = params.far;
+    pointLight2.shadow.camera.fov = params.fov;
 
     stats.end();
 
@@ -103,7 +116,7 @@ function animate() {
 function createScene() {
     renderer = new THREE.WebGLRenderer();
     renderer.setSize( window.innerWidth, window.innerHeight );
-    renderer.shadowMapEnabled = true;
+    renderer.shadowMap.enabled = true;
     renderer.shadowMapSoft = true;
 
     scene = new THREE.Scene();
@@ -112,34 +125,36 @@ function createScene() {
     camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.2, 25000);
     camera.position.z = 1000;
 
-    renderer.shadowCameraNear = 3;
-    renderer.shadowCameraFar = camera.far;
-    renderer.shadowCameraFov = 50;
-
     controls = new THREE.OrbitControls( camera, document.getElementById("scene-container"));
 }
 function createLight() {
+    scene.add( new THREE.HemisphereLight( 0xffffff, 0x080820, 0.5 ) );
     //--------------------------light-------------------------------
     //scene.add( new THREE.AmbientLight( 0x404040 ) );
 
     // White directional light at half intensity shining from the top.
-    directionalLight = new THREE.DirectionalLight(0xdfebff, 1.75);
+    directionalLight = new THREE.DirectionalLight(0xffffff);
     directionalLight.position.set(300, 600, 50);
     directionalLight.position.multiplyScalar(1.3);
 
     scene.add(directionalLight);
 
-    var dirLightHelper = new THREE.DirectionalLightHelper( directionalLight, 100 );
-    scene.add( dirLightHelper );
+    var sphereDirGeometry = new THREE.SphereGeometry( 50 );
+    var sphereDirMaterial = new THREE.MeshLambertMaterial( {color: 0x444444, emissive: new THREE.Color(0xffffff), opacity: 0.3, transparent: true} );
+    sphereDir = new THREE.Mesh( sphereDirGeometry, sphereDirMaterial );
+    sphereDir.position.set(directionalLight.position.x, directionalLight.position.y, directionalLight.position.z );
+    scene.add(sphereDir);
 
     pointLight1 = new THREE.SpotLight( 0xffffff );
     pointLight1.position.set( 200,300, 400);
     pointLight1.angle = 180;
     scene.add( pointLight1 );
 
-    var sphereSize = 10;
-    var pointLightHelper1 = new THREE.PointLightHelper( pointLight1, sphereSize );
-    scene.add( pointLightHelper1 );
+    var sphere1Geometry = new THREE.SphereGeometry( 10 );
+    var sphere1Material = new THREE.MeshLambertMaterial( {color: 0x444444, emissive: new THREE.Color(0xffffff), opacity: 0.3, transparent: true} );
+    sphere1 = new THREE.Mesh( sphere1Geometry, sphere1Material );
+    sphere1.position.set(pointLight1.position.x, pointLight1.position.y, pointLight1.position.z );
+    scene.add(sphere1);
 
     pointLight2 = new THREE.SpotLight( 0xffffff );
     pointLight2.position.set( -200,300, -400);
@@ -147,9 +162,11 @@ function createLight() {
 
     scene.add( pointLight2 );
 
-    var sphereSize = 10;
-    var pointLightHelper2 = new THREE.PointLightHelper( pointLight2, sphereSize );
-    scene.add( pointLightHelper2 );
+    var sphere2Geometry = new THREE.SphereGeometry( 10 );
+    var sphere2Material = new THREE.MeshLambertMaterial( {color: 0x444444, emissive: new THREE.Color(0xffffff), opacity: 0.3, transparent: true} );
+    sphere2 = new THREE.Mesh( sphere2Geometry, sphere2Material );
+    sphere2.position.set(pointLight2.position.x, pointLight2.position.y, pointLight2.position.z );
+    scene.add(sphere2);
 }
 function createShadow(){
 
@@ -157,59 +174,54 @@ function createShadow(){
 
 //directionaLight
     directionalLight.castShadow = true;
-    directionalLight.shadowCameraVisible = true;
 
-    directionalLight.shadowMapWidth = 1024;
-    directionalLight.shadowMapHeight = 1024;
+    directionalLight.shadow.mapSize.width = 1024;
+    directionalLight.shadow.mapSize.height = 1024;
 
-    directionalLight.shadowCameraNear = params.near;
-    directionalLight.shadowCameraFar = params.far;
-    directionalLight.shadowCameraFov = params.fov;
+    directionalLight.shadow.camera.near = params.near;
+    directionalLight.shadow.camera.far = params.far;
+    directionalLight.shadow.camera.fov = params.fov;
 
-    directionalLight.shadowCameraLeft = -d;
-    directionalLight.shadowCameraRight = d;
-    directionalLight.shadowCameraTop = d;
-    directionalLight.shadowCameraBottom = -d;
+    directionalLight.shadow.camera.left = -d;
+    directionalLight.shadow.camera.right = d;
+    directionalLight.shadow.camera.top = d;
+    directionalLight.shadow.camera.bottom = -d;
 
-    directionalLight.shadowDarkness = 0.2;
+    directionalLight.shadow.bias = 0.001;
 
 //point light 1
     pointLight1.castShadow = true;
-    pointLight1.shadowCameraVisible = true;
 
-    pointLight1.shadowMapWidth = 1024;
-    pointLight1.shadowMapHeight = 1024;
+    pointLight1.shadow.mapSize.width = 1024;
+    pointLight1.shadow.mapSize.height = 1024;
 
-    pointLight1.shadowCameraNear = params.near;
-    pointLight1.shadowCameraFar = params.far;
-    pointLight1.shadowCameraFov = params.fov;
+    pointLight1.shadow.camera.near = params.near;
+    pointLight1.shadow.camera.far = params.far;
+    pointLight1.shadow.camera.fov = params.fov;
 
-    pointLight1.shadowCameraLeft = -d;
-    pointLight1.shadowCameraRight = d;
-    pointLight1.shadowCameraTop = d;
-    pointLight1.shadowCameraBottom = -d;
+    pointLight1.shadow.camera.left = -d;
+    pointLight1.shadow.camera.right = d;
+    pointLight1.shadow.camera.top = d;
+    pointLight1.shadow.camera.bottom = -d;
 
-    pointLight1.shadowDarkness = 0.2;
-    pointLight1.shadowBias = 0.001;
+    pointLight1.shadow.bias = 0.001;
 
 //point light 2
     pointLight2.castShadow = true;
-    pointLight2.shadowCameraVisible = true;
 
-    pointLight2.shadowMapWidth = 1024;
-    pointLight2.shadowMapHeight = 1024;
+    pointLight2.shadow.mapSize.width = 1024;
+    pointLight2.shadow.mapSize.height = 1024;
 
-    pointLight2.shadowCameraNear = params.near;
-    pointLight2.shadowCameraFar = params.far;
-    pointLight2.shadowCameraFov = params.fov;
+    pointLight2.shadow.camera.near = params.near;
+    pointLight2.shadow.camera.far = params.far;
+    pointLight2.shadow.camera.fov = params.fov;
 
-    pointLight2.shadowCameraLeft = -d;
-    pointLight2.shadowCameraRight = d;
-    pointLight2.shadowCameraTop = d;
-    pointLight2.shadowCameraBottom = -d;
+    pointLight2.shadow.camera.left = -d;
+    pointLight2.shadow.camera.right = d;
+    pointLight2.shadow.camera.top = d;
+    pointLight2.shadow.camera.bottom = -d;
 
-    pointLight2.shadowDarkness = 0.2;
-    pointLight2.shadowBias = 0.001;
+    pointLight2.shadow.bias = 0.001;
 
 }
 function createObjects() {
@@ -229,7 +241,7 @@ function createObjects() {
         map        :  texture,
         bumpScale  :  0.2 });
     meshPhong = new THREE.Mesh( geometry, phongMaterial );
-    meshPhong.position.set(200,0,0);
+    meshPhong.position.set(300,0,0);
     meshPhong.castShadow = true;
     meshPhong.receiveShadow = false;
     scene.add( meshPhong );
@@ -245,52 +257,149 @@ function createObjects() {
         roughness : 0.8,
         bumpScale  :  0.2 } );
     meshStandard = new THREE.Mesh( geometry, stdMaterial );
-    meshStandard.position.set(-200,0,0);
+    meshStandard.position.set(-300,0,0);
     meshStandard.castShadow = true;
     meshStandard.receiveShadow = false;
     scene.add( meshStandard );
-
-    //normal object
-    geometry = new THREE.BoxGeometry(150, 150, 150 );
-    normalMaterial = new THREE.MeshLambertMaterial({
-        color      :  new THREE.Color('#FFEEB0'),
-        //emissive   :  new THREE.Color("rgb(7,3,5)"),
-        //specular   :  new THREE.Color('#cb4154'),
-        //shininess  :  0.1,
-        normalMap  :  normalMap,
-        specularMap: roughnessMap,
-        map        :  texture,
-        bumpScale  :  0.2 });
-    meshNormal = new THREE.Mesh( geometry, normalMaterial );
-    meshNormal.position.set(0,200,0);
-    meshNormal.castShadow = true;
-    meshNormal.receiveShadow = false;
-    scene.add( meshNormal );
 
     //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
     //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
     var planeGeometry = new THREE.BoxGeometry(2000, 2000, 10, 100, 100, 5);
     var planeMaterial = new THREE.MeshPhongMaterial( {
-        color: 0xCD8500,
+        color: 0x92806d,
         side: THREE.DoubleSide,
-        map: new THREE.TextureLoader().load( "textures/wood/wood3/Base_Color.jpg",    async function ( map ) {
-            textureMap["checker"][2] = map;
+        map: new THREE.TextureLoader().load( "textures/cobblestone/cobble3/Base_Color.jpg",    async function ( map ) {
             map.name = "checker";
             map.wrapS = map.wrapT = THREE.RepeatWrapping;
             map.anisotropy = 16;
-            map.repeat.set(4, 4);
+            map.offset.set( 0, 0 );
+            map.repeat.set(8, 8);
         })} );
     plane = new THREE.Mesh( planeGeometry, planeMaterial );
     plane.rotation.x = Math.PI / 2;
     plane.position.y = -150;
-    plane.material.normalMap = new THREE.TextureLoader().load( "textures/wood/wood3/Normal.jpg" );
+    plane.material.normalMap = new THREE.TextureLoader().load( "textures/cobblestone/cobble3/Normal.jpg" );
     plane.material.normalMap.wrapS = plane.material.normalMap.wrapT = THREE.RepeatWrapping;
-    plane.material.normalMap.repeat.set(4, 4);
-    plane.material.bumpMap = new THREE.TextureLoader().load( "textures/wood/wood3/Bump.jpg" );
+    plane.material.normalMap.offset.set( 0, 0 );
+    plane.material.normalMap.repeat.set(8, 8);
+    plane.material.bumpMap = new THREE.TextureLoader().load( "textures/cobblestone/cobble3/Bump.jpg" );
     plane.material.bumpMap.wrapS = plane.material.bumpMap.wrapT = THREE.RepeatWrapping;
-    plane.material.bumpMap.repeat.set(4, 4);
+    plane.material.bumpMap.offset.set( 0, 0 );
+    plane.material.bumpMap.repeat.set(8, 8);
     plane.receiveShadow = true;
     scene.add( plane );
+
+    //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
+    //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
+    var leftWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
+    var leftWallMaterial = new THREE.MeshPhongMaterial( {
+        color: 0xaf7c63,
+        side: THREE.DoubleSide,
+        map: new THREE.TextureLoader().load( "textures/bricks/bricks1/Base_Color.jpg",    async function ( map ) {
+            textureMap["checker"][2] = map;
+            map.name = "checker";
+            map.wrapS = map.wrapT = THREE.RepeatWrapping;
+            map.anisotropy = 16;
+            map.offset.set( 0, 0 );
+            map.repeat.set(8, 4);
+            //map.repeat.set(8, 8);
+        }),
+        normalMap : new THREE.TextureLoader().load( "textures/bricks/bricks1/Normal.jpg",    async function ( map ) {
+            textureMap["checker"][2] = map;
+            map.name = "checker";
+            map.wrapS = map.wrapT = THREE.RepeatWrapping;
+            map.anisotropy = 16;
+            map.offset.set( 0, 0 );
+            map.repeat.set(8, 4);
+            //map.repeat.set(8, 8);
+        }),
+        bumpMap : new THREE.TextureLoader().load( "textures/bricks/bricks1/Bump.jpg",    async function ( map ) {
+            textureMap["checker"][2] = map;
+            map.name = "checker";
+            map.wrapS = map.wrapT = THREE.RepeatWrapping;
+            map.anisotropy = 16;
+            map.offset.set( 0, 0 );
+            map.repeat.set(8, 4);
+            //map.repeat.set(8, 8);
+        })
+} );
+    var leftWall = new THREE.Mesh( leftWallGeometry, leftWallMaterial );
+    leftWall.rotation.y = Math.PI / 2;
+    leftWall.position.x = -1000;
+    leftWall.position.y = 350;
+    leftWall.receiveShadow = true;
+    scene.add( leftWall );
+
+    //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
+    //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
+    var backWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
+    var backWallMaterial = new THREE.MeshPhongMaterial( {
+        color: 0x92806d,
+        side: THREE.DoubleSide,
+        map: new THREE.TextureLoader().load( "textures/bricks/bricks2/Base_Color.jpg",    async function ( map ) {
+            textureMap["checker"][2] = map;
+            map.name = "checker";
+            map.wrapS = map.wrapT = THREE.RepeatWrapping;
+            map.anisotropy = 16;
+            map.repeat.set(8, 4);
+        }), normalMap: new THREE.TextureLoader().load( "textures/bricks/bricks2/Normal.jpg",    async function ( map ) {
+            textureMap["checker"][2] = map;
+            map.name = "checker";
+            map.wrapS = map.wrapT = THREE.RepeatWrapping;
+            map.anisotropy = 16;
+            map.repeat.set(8, 4);
+        }), bumpMap: new THREE.TextureLoader().load( "textures/bricks/bricks2/Bump.jpg",    async function ( map ) {
+            textureMap["checker"][2] = map;
+            map.name = "checker";
+            map.wrapS = map.wrapT = THREE.RepeatWrapping;
+            map.anisotropy = 16;
+            map.repeat.set(8, 4);
+        }),
+
+    } );
+    var backWall = new THREE.Mesh( backWallGeometry, backWallMaterial );
+    backWall.position.z = -1000;
+    backWall.position.y = 350;
+    backWall.receiveShadow = true;
+    scene.add( backWall );
+
+    //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
+    //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
+    var rightWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
+    var rightWallMaterial = new THREE.MeshPhongMaterial( {
+        color: 0x92806d,
+        side: THREE.DoubleSide,
+        map: new THREE.TextureLoader().load( "textures/bricks/bricks3/Base_Color.jpg",    async function ( map ) {
+            textureMap["checker"][2] = map;
+            map.name = "checker";
+            map.wrapS = map.wrapT = THREE.RepeatWrapping;
+            map.anisotropy = 16;
+            map.repeat.set(8, 4);
+        }),
+        normalMap: new THREE.TextureLoader().load( "textures/bricks/bricks3/Normal.jpg",    async function ( map ) {
+            textureMap["checker"][2] = map;
+            map.name = "checker";
+            map.wrapS = map.wrapT = THREE.RepeatWrapping;
+            map.anisotropy = 16;
+            map.repeat.set(8, 4);
+        }),
+        bumpMap: new THREE.TextureLoader().load( "textures/bricks/bricks3/Bump.jpg",    async function ( map ) {
+            textureMap["checker"][2] = map;
+            map.name = "checker";
+            map.wrapS = map.wrapT = THREE.RepeatWrapping;
+            map.anisotropy = 16;
+            map.repeat.set(8, 4);
+        }),
+
+    } );
+    var rightWall = new THREE.Mesh( rightWallGeometry, rightWallMaterial );
+    rightWall.rotation.y = Math.PI / 2;
+    rightWall.position.x = 1000;
+    rightWall.position.y = 350;
+    rightWall.receiveShadow = true;
+    scene.add( rightWall );
+
+    scene.add( meshNormal );
 }
 function createUI(){
 //stats
@@ -323,7 +432,7 @@ function createUI(){
     var textures = gui.addFolder('Textures');
     textures.add(params, 'bumpScale', -1.0, 1.0);
     textures.add(params, 'roughness', 0.0, 1.0);
-    textures.add(params, 'shininess', 0.0, 1.0);
+    textures.add(params, 'shininess', 0.0, 10.0);
 
     textureEvent = gui.add(params, 'texture', [ 'wood1', 'wood2','wood3', 'cobble1','cobble2',
         'cobble3','roof1', 'roof2','roof3', 'bricks1','bricks2', 'bricks3', 'iceTexture'] );
@@ -420,6 +529,37 @@ async function populateTextureMap(){
         await loadTex();
     })();
 }
+async function populateShaderMap(){
+    await (async function loadShader(){
+        var vertexShader = new Promise(resolve => {
+            new THREE.FileLoader().load("Shaders/Wireframe_vertex.glsl", resolve);
+        });
+        shaderMap["wireframe"][0] = await vertexShader;
+
+        var fragmentShader = new Promise(resolve => {
+            new THREE.FileLoader().load("Shaders/Wireframe_fragment.glsl", resolve);
+        });
+        shaderMap["wireframe"][1] = await fragmentShader;
+    })();
+    //normal object
+    geometry = new THREE.BoxGeometry(150, 150, 150 );
+    /*    normalMaterial = new THREE.MeshLambertMaterial({
+            color      :  new THREE.Color('#FFEEB0'),
+            //emissive   :  new THREE.Color("rgb(7,3,5)"),
+            //specular   :  new THREE.Color('#cb4154'),
+            //shininess  :  0.1,
+            normalMap  :  normalMap,
+            specularMap: roughnessMap,
+            map        :  texture,
+            bumpScale  :  0.2 });*/
+    normalMaterial = new THREE.ShaderMaterial({
+        vertexShader: shaderMap["wireframe"][0],
+        fragmentShader: shaderMap["wireframe"][1]
+    });
+    meshNormal = new THREE.Mesh( geometry, normalMaterial );
+    meshNormal.castShadow = true;
+
+}
 function applyMaterial(value){
     //phong
     meshPhong.material = new THREE.MeshPhongMaterial( {
@@ -477,12 +617,19 @@ class MinMaxGUIHelper {
         this.min = this.min;  // this will call the min setter
     }
 }
-
-var textureMapPromise = new Promise(async function(resolve, reject) {
-    await populateTextureMap();
-    resolve();
-});
-textureMapPromise.then(function(value) {
-    init();
-    animate();
-});
+function getScene(){
+    var currentScene = scene;
+    return currentScene;
+}
+function startApp() {
+    var textureMapPromise = new Promise(async function (resolve, reject) {
+        await populateShaderMap();
+        await populateTextureMap();
+        resolve();
+    });
+    return textureMapPromise.then(function (value) {
+        init();
+        animate();
+    });
+}
+startApp();
