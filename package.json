@@ -1,0 +1,23 @@
+{
+  "name": "materialeditor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "dependencies": {
+    "dat.gui": "^0.7.6",
+    "stats-js": "^1.0.0",
+    "three": "^0.103.0",
+    "three-orbit-controls": "^82.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://MelvinBuzz@bitbucket.org/MelvinBuzz/materialeditor.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://bitbucket.org/MelvinBuzz/materialeditor#readme"
+}

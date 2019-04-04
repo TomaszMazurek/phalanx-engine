@@ -1,3 +1,9 @@
+const THREE = require('three');
+const OrbitControls = require('three-orbit-controls')(THREE);
+const Stats = require('stats-js');
+const dat = require('dat.gui');
+
+
 var scene, camera, renderer, stats, controls, gui, textureEvent,
     params = {
         speed : 0.001,
@@ -23,7 +29,6 @@ var geometry, material, plane, texture,
     sphere1, sphere2, sphereDir,
     near,far, fov;
 
-
 var textureLoader = new THREE.TextureLoader();
 var textureMap = {
     wood1: ["textures/wood/wood1/", 0xFFEEB0, undefined, undefined, undefined, undefined, undefined],
@@ -39,12 +44,19 @@ var textureMap = {
     bricks2: ["textures/bricks/bricks2/", 0xb4705f, undefined, undefined, undefined, undefined, undefined],
     bricks3: ["textures/bricks/bricks3/", 0xb18a6f, undefined, undefined, undefined, undefined, undefined],
     iceTexture: ["textures/others/iceTexture/", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined],
-    checker: ["textures/others/checker", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined]
+    checker: ["textures/others/checker", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined],
+    shader: [null, 0x6bb7e9, undefined, undefined, undefined, undefined, undefined],
 };
 var shaderMap =  {
     wireframe: [undefined, undefined]
 };
 
+var materialMap =  {
+    wireframe: [undefined, undefined],
+    phong: [undefined, undefined],
+    pbr: [undefined, undefined],
+    lambert: [undefined, undefined],
+};
 function init() {
     createScene();
     createUI();
@@ -125,7 +137,7 @@ function createScene() {
     camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.2, 25000);
     camera.position.z = 1000;
 
-    controls = new THREE.OrbitControls( camera, document.getElementById("scene-container"));
+    controls = new OrbitControls( camera, document.getElementById("scene-container"));
 }
 function createLight() {
     scene.add( new THREE.HemisphereLight( 0xffffff, 0x080820, 0.5 ) );
@@ -532,17 +544,17 @@ async function populateTextureMap(){
 async function populateShaderMap(){
     await (async function loadShader(){
         var vertexShader = new Promise(resolve => {
-            new THREE.FileLoader().load("Shaders/Wireframe_vertex.glsl", resolve);
+            new THREE.FileLoader().load("shaders/Wireframe_vertex.glsl", resolve);
         });
         shaderMap["wireframe"][0] = await vertexShader;
 
         var fragmentShader = new Promise(resolve => {
-            new THREE.FileLoader().load("Shaders/Wireframe_fragment.glsl", resolve);
+            new THREE.FileLoader().load("shaders/Wireframe_fragment.glsl", resolve);
         });
         shaderMap["wireframe"][1] = await fragmentShader;
     })();
     //normal object
-    geometry = new THREE.BoxGeometry(150, 150, 150 );
+    var geometry = new THREE.BoxGeometry(150, 150, 150 );
     /*    normalMaterial = new THREE.MeshLambertMaterial({
             color      :  new THREE.Color('#FFEEB0'),
             //emissive   :  new THREE.Color("rgb(7,3,5)"),
@@ -552,11 +564,19 @@ async function populateShaderMap(){
             specularMap: roughnessMap,
             map        :  texture,
             bumpScale  :  0.2 });*/
+    var bufferGeometry = new THREE.BufferGeometry().fromGeometry( geometry );
+
     normalMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)},
+            colorA: {type: 'vec3', value: new THREE.Color(0x74ebd5)}
+        },
         vertexShader: shaderMap["wireframe"][0],
         fragmentShader: shaderMap["wireframe"][1]
     });
-    meshNormal = new THREE.Mesh( geometry, normalMaterial );
+
+    materialMap["wireframe"][0] = normalMaterial;
+    meshNormal = new THREE.Mesh( bufferGeometry, normalMaterial );
     meshNormal.castShadow = true;
 
 }
@@ -569,6 +589,7 @@ function applyMaterial(value){
         specularMap : textureMap[value][5],
         aoMap : textureMap[value][6]
     });
+    materialMap["phong"][0] = meshPhong.material;
     meshPhong.material.needsUpdate = true;
 
     //PBR
@@ -579,6 +600,7 @@ function applyMaterial(value){
         roughnessMap : textureMap[value][5],
         aoMap : textureMap[value][6]
     });
+    materialMap["pbr"][0] = meshStandard.material;
     meshStandard.material.needsUpdate = true;
 
     //Lambert
@@ -586,6 +608,7 @@ function applyMaterial(value){
         map: textureMap[value][2],
         aoMap : textureMap[value][6]
     });
+    materialMap["lambert"][0] = meshNormal.material;
     meshNormal.material.needsUpdate = true;
 
     meshPhong.material.color = new THREE.Color(textureMap[value][1]);
