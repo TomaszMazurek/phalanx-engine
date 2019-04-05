@@ -1,9 +1,3 @@
-const THREE = require('three');
-const OrbitControls = require('three-orbit-controls')(THREE);
-const Stats = require('stats-js');
-const dat = require('dat.gui');
-
-
 var scene, camera, renderer, stats, controls, gui, textureEvent,
     params = {
         speed : 0.001,
@@ -57,6 +51,7 @@ var materialMap =  {
     pbr: [undefined, undefined],
     lambert: [undefined, undefined],
 };
+
 function init() {
     createScene();
     createUI();
@@ -137,7 +132,7 @@ function createScene() {
     camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.2, 25000);
     camera.position.z = 1000;
 
-    controls = new OrbitControls( camera, document.getElementById("scene-container"));
+    controls = new THREE.OrbitControls( camera, document.getElementById("scene-container"));
 }
 function createLight() {
     scene.add( new THREE.HemisphereLight( 0xffffff, 0x080820, 0.5 ) );
@@ -157,7 +152,7 @@ function createLight() {
     sphereDir.position.set(directionalLight.position.x, directionalLight.position.y, directionalLight.position.z );
     scene.add(sphereDir);
 
-    pointLight1 = new THREE.SpotLight( 0xffffff );
+    pointLight1 = new THREE.PointLight( 0xffffff );
     pointLight1.position.set( 200,300, 400);
     pointLight1.angle = 180;
     scene.add( pointLight1 );
@@ -168,7 +163,7 @@ function createLight() {
     sphere1.position.set(pointLight1.position.x, pointLight1.position.y, pointLight1.position.z );
     scene.add(sphere1);
 
-    pointLight2 = new THREE.SpotLight( 0xffffff );
+    pointLight2 = new THREE.PointLight( 0xffffff );
     pointLight2.position.set( -200,300, -400);
     pointLight2.angle = 180;
 
@@ -240,7 +235,8 @@ function createObjects() {
     texture = new THREE.TextureLoader().load( "textures/wood/wood1/Base_Color.jpg" );
     normalMap = new THREE.TextureLoader().load( "textures/wood/wood1/Normal.jpg" );
     roughnessMap = new THREE.TextureLoader().load( "textures/wood/wood1/Roughness.jpg" );
-
+    var shaderMaterial = new WireframeMaterial();
+    debugger;
     //phong object
     geometry = new THREE.BoxGeometry( 150, 150, 150 );
     phongMaterial = new THREE.MeshPhongMaterial({

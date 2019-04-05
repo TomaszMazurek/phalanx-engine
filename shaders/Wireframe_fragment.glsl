@@ -1,13 +1,19 @@
-/*
-void main() {
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-}
-*/
+uniform vec3 diffuse;
+varying vec3 vPos;
+varying vec3 vNormal;
 
-uniform vec3 colorA;
-uniform vec3 colorB;
-varying vec3 vUv;
+struct PointLight {
+    vec3 position;
+    vec3 color;
+};
+uniform PointLight pointLights[ NUM_POINT_LIGHTS ];
 
 void main() {
-    gl_FragColor = vec4(mix(colorA, colorB, vUv.z), 1.0);
+    vec4 addedLights = vec4(0.1, 0.1, 0.1, 1.0);
+    for(int l = 0; l < NUM_POINT_LIGHTS; l++) {
+        vec3 adjustedLight = pointLights[l].position + cameraPosition;
+        vec3 lightDirection = normalize(vPos - adjustedLight);
+        addedLights.rgb += clamp(dot(-lightDirection, vNormal), 0.0, 1.0) * pointLights[l].color;
+    }
+    gl_FragColor = addedLights;//mix(vec4(diffuse.x, diffuse.y, diffuse.z, 1.0), addedLights, addedLights);
 }
