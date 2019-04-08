@@ -1,20 +1,4 @@
-var scene, camera, renderer, stats, controls, gui, textureEvent,
-    params = {
-        speed : 0.001,
-        pointLight1Power: 0.9,
-        pointLight1Shadow: true,
-        pointLight2Power: 0.9,
-        pointLight2Shadow: true,
-        directionalLight: 0.9,
-        directionalLightShadow: true,
-        bumpScale : 1.0,
-        roughness : 1,
-        shininess : 0.0,
-        texture: "wood1",
-        near : 500,
-        far : 25000,
-        fov : 30
-};
+var textureMap, stats,  gui, params;
 var geometry, material, plane, texture,
     normalMap, specularMap, roughnessMap,
     mesh, phongMaterial, stdMaterial, normalMaterial,
@@ -23,24 +7,6 @@ var geometry, material, plane, texture,
     sphere1, sphere2, sphereDir,
     near,far, fov;
 
-var textureLoader = new THREE.TextureLoader();
-var textureMap = {
-    wood1: ["textures/wood/wood1/", 0xFFEEB0, undefined, undefined, undefined, undefined, undefined],
-    wood2: ["textures/wood/wood2/", 0xa0522d, undefined, undefined, undefined, undefined, undefined],
-    wood3: ["textures/wood/wood3/", 0xCD8500, undefined, undefined, undefined, undefined, undefined],
-    cobble1: ["textures/cobblestone/cobble1/", 0x92806d, undefined, undefined, undefined, undefined, undefined],
-    cobble2: ["textures/cobblestone/cobble2/", 0x878481, undefined, undefined, undefined, undefined, undefined],
-    cobble3: ["textures/cobblestone/cobble3/", 0x95908c, undefined, undefined, undefined, undefined, undefined],
-    roof1: ["textures/roofing/roof1/", 0xdeaf8a, undefined, undefined, undefined, undefined, undefined],
-    roof2: ["textures/roofing/roof2/", 0xc5976d, undefined, undefined, undefined, undefined, undefined],
-    roof3: ["textures/roofing/roof3/", 0xa37862, undefined, undefined, undefined, undefined, undefined],
-    bricks1: ["textures/bricks/bricks1/", 0xaf7c63, undefined, undefined, undefined, undefined, undefined],
-    bricks2: ["textures/bricks/bricks2/", 0xb4705f, undefined, undefined, undefined, undefined, undefined],
-    bricks3: ["textures/bricks/bricks3/", 0xb18a6f, undefined, undefined, undefined, undefined, undefined],
-    iceTexture: ["textures/others/iceTexture/", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined],
-    checker: ["textures/others/checker", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined],
-    shader: [null, 0x6bb7e9, undefined, undefined, undefined, undefined, undefined],
-};
 var shaderMap =  {
     wireframe: [undefined, undefined]
 };
@@ -52,17 +18,29 @@ var materialMap =  {
     lambert: [undefined, undefined],
 };
 
-function init() {
-    createScene();
-    createUI();
-    createLight();
-    createShadow();
-    createObjects();
-    document.getElementById("scene-container").appendChild( renderer.domElement );
-    document.body.appendChild( stats.domElement );
-    document.body.appendChild( gui.domElement );
-
-    controls.update();
+async function init() {
+    var textures = new Textures();
+    textureMap = await textures.populateTextureMap();
+   debugger;
+        return new GUI(camera).init().then(function (result) {
+            gui = result.gui;
+            stats = result.stats;
+            params = result.params;
+            result.textureEvent.onChange(function(value) {
+                applyMaterial(value);
+            });
+            createLight();
+            createShadow();
+            createObjects();
+            document.getElementById("scene-container").appendChild( renderer.domElement );
+            document.body.appendChild( stats.domElement );
+            document.body.appendChild( gui.domElement );
+            controls.update();
+            return new Promise(function (resolve, reject) {
+                  animate();
+                  resolve();
+            });
+        });
 }
 function animate() {
 
@@ -120,20 +98,7 @@ function animate() {
     renderer.render( scene, camera );
 
 }
-function createScene() {
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMapSoft = true;
 
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color( 'skyblue' );
-
-    camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.2, 25000);
-    camera.position.z = 1000;
-
-    controls = new THREE.OrbitControls( camera, document.getElementById("scene-container"));
-}
 function createLight() {
     scene.add( new THREE.HemisphereLight( 0xffffff, 0x080820, 0.5 ) );
     //--------------------------light-------------------------------
@@ -232,9 +197,6 @@ function createShadow(){
 
 }
 function createObjects() {
-    texture = new THREE.TextureLoader().load( "textures/wood/wood1/Base_Color.jpg" );
-    normalMap = new THREE.TextureLoader().load( "textures/wood/wood1/Normal.jpg" );
-    roughnessMap = new THREE.TextureLoader().load( "textures/wood/wood1/Roughness.jpg" );
     var shaderMaterial = new WireframeMaterial();
     debugger;
     //phong object
@@ -244,9 +206,9 @@ function createObjects() {
 //        emissive   :  new THREE.Color("rgb(7,3,5)"),
 //        specular   :  new THREE.Color(0xFFEEB0),
         shininess  :  0.1,
-        bumpMap  :  normalMap,
-        specularMap: roughnessMap,
-        map        :  texture,
+        map        :  textureMap['wood1'][2],
+        bumpMap  :  textureMap['wood1'][3],
+        normalMap  :  textureMap['wood1'][4],
         bumpScale  :  0.2 });
     meshPhong = new THREE.Mesh( geometry, phongMaterial );
     meshPhong.position.set(300,0,0);
@@ -258,9 +220,10 @@ function createObjects() {
     geometry = new THREE.BoxGeometry( 150, 150, 150  );
     stdMaterial = new THREE.MeshStandardMaterial( {
         color: new THREE.Color('#FFEEB0'),
-        map: texture,
-        bumpMap: normalMap,
-        roughnessMap : roughnessMap,
+        map        :  textureMap['wood1'][2],
+        bumpMap  :  textureMap['wood1'][3],
+        normalMap  :  textureMap['wood1'][4],
+        roughnessMap: textureMap['wood1'][5],
         metalness : 0.1,
         roughness : 0.8,
         bumpScale  :  0.2 } );
@@ -407,159 +370,9 @@ function createObjects() {
     rightWall.receiveShadow = true;
     scene.add( rightWall );
 
-    scene.add( meshNormal );
-}
-function createUI(){
-//stats
-    stats = new Stats();
-    stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-//dat
-    gui = new dat.GUI();
 
-    var objects = gui.addFolder('Objects');
-    objects.add(params, 'speed', -0.1, 0.1).name('speed');
-
-    function updateCamera() {
-        camera.updateProjectionMatrix();
-    }
-    var view = gui.addFolder('Camera');
-
-    view.add(camera, 'fov', 1, 180).onChange(updateCamera);
-    const minMaxGUIHelper = new MinMaxGUIHelper(camera, 'near', 'far', 0.1);
-    view.add(minMaxGUIHelper, 'min', 0.1, 10000, 0.1).name('near').onChange(updateCamera);
-    view.add(minMaxGUIHelper, 'max', 0.1, 25000, 0.1).name('far').onChange(updateCamera);
-
-    var lights = gui.addFolder('Lights');
-    lights.add(params, 'pointLight1Power', 0.0, 3.0);
-    lights.add(params, 'pointLight1Shadow');
-    lights.add(params, 'pointLight2Power', 0.0, 3.0);
-    lights.add(params, 'pointLight2Shadow');
-    lights.add(params, 'directionalLight', 0.0, 3.0);
-    lights.add(params, 'directionalLightShadow');
-
-    var textures = gui.addFolder('Textures');
-    textures.add(params, 'bumpScale', -1.0, 1.0);
-    textures.add(params, 'roughness', 0.0, 1.0);
-    textures.add(params, 'shininess', 0.0, 10.0);
-
-    textureEvent = gui.add(params, 'texture', [ 'wood1', 'wood2','wood3', 'cobble1','cobble2',
-        'cobble3','roof1', 'roof2','roof3', 'bricks1','bricks2', 'bricks3', 'iceTexture'] );
-    textureEvent.onChange(function(value) {
-        applyMaterial(value);
-    });
-}
-async function populateTextureMap(){
-    await (async function populateTextures() {
-
-        var keyArray = Object.keys(textureMap);
-        var i = 0;
-        var loadTex = async function() {
-            var key = keyArray[i];
-            textureLoader.load( textureMap[key][0] + "Base_Color.jpg",
-                async function ( map ) {
-                    textureMap[key][2] = map;
-                    map.name = key;
-                    map.wrapS = THREE.RepeatWrapping;
-                    map.wrapT = THREE.RepeatWrapping;
-                    map.anisotropy = 16;
-                    map.repeat.set( 1, 1 );
-
-                    if (i < keyArray.length - 1) {
-                        i++;
-                        await loadTex();
-                    }
-                });
-        };
-        await loadTex();
-    })();
-    await (async function populateBumpMaps() {
-        var keyArray = Object.keys(textureMap);
-        var i = 0;
-        var loadTex = async function() {
-            var key = keyArray[i];
-            textureLoader.load( textureMap[key][0] + "Bump.jpg",
-                async function ( map ) {
-                    textureMap[key][3] = map;
-                    if (i < keyArray.length - 1) {
-                        i++;
-                        await loadTex();
-                    }
-                });
-        };
-        await loadTex();
-    })();
-    await (async function populateNormalMaps() {
-        var keyArray = Object.keys(textureMap);
-        var i = 0;
-        var loadTex = async function() {
-            var key = keyArray[i];
-            textureLoader.load( textureMap[key][0] + "Normal.jpg",
-                async function ( map ) {
-                    textureMap[key][4] = map;
-                    if (i < keyArray.length - 1) {
-                        i++;
-                        await loadTex();
-                    }
-                });
-        };
-        await loadTex();
-    })();
-    await (async function populateRoughnessMaps() {
-        var keyArray = Object.keys(textureMap);
-        var i = 0;
-        var loadTex = async function() {
-            var key = keyArray[i];
-            textureLoader.load( textureMap[key][0] + "Roughness.jpg",
-                async function ( map ) {
-                    textureMap[key][5] = map;
-                    if (i < keyArray.length - 1) {
-                        i++;
-                        await loadTex();
-                    }
-                });
-        };
-        await loadTex();
-    })();
-    await (async function populateAOMaps() {
-        var keyArray = Object.keys(textureMap);
-        var i = 0;
-        var loadTex = async function() {
-            var key = keyArray[i];
-            textureLoader.load( textureMap[key][0] + "Ambient_Occlusion.jpg",
-                async function ( map ) {
-                    textureMap[key][6] = map;
-                    if (i < keyArray.length - 1) {
-                        i++;
-                        await loadTex();
-                    }
-                });
-        };
-        await loadTex();
-    })();
-}
-async function populateShaderMap(){
-    await (async function loadShader(){
-        var vertexShader = new Promise(resolve => {
-            new THREE.FileLoader().load("shaders/Wireframe_vertex.glsl", resolve);
-        });
-        shaderMap["wireframe"][0] = await vertexShader;
-
-        var fragmentShader = new Promise(resolve => {
-            new THREE.FileLoader().load("shaders/Wireframe_fragment.glsl", resolve);
-        });
-        shaderMap["wireframe"][1] = await fragmentShader;
-    })();
     //normal object
     var geometry = new THREE.BoxGeometry(150, 150, 150 );
-    /*    normalMaterial = new THREE.MeshLambertMaterial({
-            color      :  new THREE.Color('#FFEEB0'),
-            //emissive   :  new THREE.Color("rgb(7,3,5)"),
-            //specular   :  new THREE.Color('#cb4154'),
-            //shininess  :  0.1,
-            normalMap  :  normalMap,
-            specularMap: roughnessMap,
-            map        :  texture,
-            bumpScale  :  0.2 });*/
     var bufferGeometry = new THREE.BufferGeometry().fromGeometry( geometry );
 
     normalMaterial = new THREE.ShaderMaterial({
@@ -574,8 +387,9 @@ async function populateShaderMap(){
     materialMap["wireframe"][0] = normalMaterial;
     meshNormal = new THREE.Mesh( bufferGeometry, normalMaterial );
     meshNormal.castShadow = true;
-
+    scene.add( meshNormal );
 }
+
 function applyMaterial(value){
     //phong
     meshPhong.material = new THREE.MeshPhongMaterial( {
@@ -614,41 +428,8 @@ function applyMaterial(value){
     meshStandard.material.name = value;
     meshNormal.material.name = value;
 }
-class MinMaxGUIHelper {
-    constructor(obj, minProp, maxProp, minDif) {
-        this.obj = obj;
-        this.minProp = minProp;
-        this.maxProp = maxProp;
-        this.minDif = minDif;
-    }
-    get min() {
-        return this.obj[this.minProp];
-    }
-    set min(v) {
-        this.obj[this.minProp] = v;
-        this.obj[this.maxProp] = Math.max(this.obj[this.maxProp], v + this.minDif);
-    }
-    get max() {
-        return this.obj[this.maxProp];
-    }
-    set max(v) {
-        this.obj[this.maxProp] = v;
-        this.min = this.min;  // this will call the min setter
-    }
-}
-function getScene(){
-    var currentScene = scene;
-    return currentScene;
-}
 function startApp() {
-    var textureMapPromise = new Promise(async function (resolve, reject) {
-        await populateShaderMap();
-        await populateTextureMap();
-        resolve();
-    });
-    return textureMapPromise.then(function (value) {
-        init();
-        animate();
-    });
+    init();
+//    animate();
 }
 startApp();
