@@ -1,16 +1,24 @@
-var scene, camera, renderer, controls;
+class Scene{
+    constructor(){
+     this.scene = null;
+     this.camera = null;
+     this.renderer = null;
+     this.controls = null;
+     this.create();
+    }
 
-(function createScene() {
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMapSoft = true;
+     create() {
+        this.renderer = new THREE.WebGLRenderer();
+        this.renderer.setSize( window.innerWidth, window.innerHeight );
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMapSoft = true;
 
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color( 'skyblue' );
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color( 'skyblue' );
 
-    camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.2, 25000);
-    camera.position.z = 1000;
+        this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.2, 25000);
+        this.camera.position.z = 1000;
 
-    controls = new THREE.OrbitControls( camera, document.getElementById("scene-container"));
-})()
+        this.controls = new THREE.OrbitControls( this.camera, document.getElementById("scene-container"));
+    };
+}

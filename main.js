@@ -1,15 +1,11 @@
-var textureMap, stats,  gui, params;
+var i, textures, shaders, textureMap, shaderMap, stats,  gui, params;
+var scene, camera, renderer, controls;
 var geometry, material, plane, texture,
     normalMap, specularMap, roughnessMap,
     mesh, phongMaterial, stdMaterial, normalMaterial,
     meshPhong, meshStandard, meshNormal,
-    pointLight1, pointLight2, directionalLight,
-    sphere1, sphere2, sphereDir,
+    light, selectedShape, shape,
     near,far, fov;
-
-var shaderMap =  {
-    wireframe: [undefined, undefined]
-};
 
 var materialMap =  {
     wireframe: [undefined, undefined],
@@ -19,19 +15,41 @@ var materialMap =  {
 };
 
 async function init() {
-    var textures = new Textures();
-    textureMap = await textures.populateTextureMap();
-   debugger;
+    textures = new Textures();
+    textureMap = await textures.populate();
+
+    shaders = new Shaders();
+    shaderMap = await shaders.populate();
+
+    var sceneObject = new Scene();
+    scene = sceneObject.scene;
+    camera = sceneObject.camera;
+    renderer = sceneObject.renderer;
+    controls = sceneObject.controls;
+
+
         return new GUI(camera).init().then(function (result) {
             gui = result.gui;
             stats = result.stats;
             params = result.params;
+            selectedShape = params.shape;
+
             result.textureEvent.onChange(function(value) {
                 applyMaterial(value);
             });
-            createLight();
-            createShadow();
+            result.shapeEvent.onChange(function(value) {
+                selectedShape = value;
+                shape.changeShape();
+            });
+            light = new Light();
+            light.createAmbientLight();
+            light.createHemisphereLight();
+            light.createDirectionalLight();
+            light.createPointLight(0xffffff, new THREE.Vector3(300, 300, 300));
+            light.createPointLight(0xffffff, new THREE.Vector3(-300, 300, -300));
+            shape = new Shape();
             createObjects();
+
             document.getElementById("scene-container").appendChild( renderer.domElement );
             document.body.appendChild( stats.domElement );
             document.body.appendChild( gui.domElement );
@@ -46,6 +64,7 @@ function animate() {
 
     stats.begin();
 
+/*
     sphereDir.material.emissiveIntensity = params.directionalLight  > 0.2 ? params.directionalLight + 0.2: 0;
     sphereDir.material.opacity = params.directionalLight > 0.2 ? 1: 0.5;
 
@@ -54,42 +73,45 @@ function animate() {
 
     sphere2.material.emissiveIntensity = params.pointLight2Power > 0.2 ? params.pointLight2Power + 0.2: 0;
     sphere2.material.opacity = params.pointLight2Power > 0.2 ? 1: 0.5;
+*/
 
-    meshPhong.rotation.x += params.speed;
-    meshPhong.rotation.y += params.speed;
-    meshPhong.material.bumpScale = params.bumpScale;
-    meshPhong.material.reflectivity = params.roughness;
-    meshPhong.material.shininess = params.shininess * 100 + 20 * params.shininess;
+    shape.phong.rotation.x += params.speed;
+    shape.phong.rotation.y += params.speed;
+    shape.phong.material.bumpScale = params.bumpScale;
+    //shape.phong.material.reflectivity = params.roughness;
+    shape.phong.material.shininess = params.shininess * 100 + 20 * params.shininess;
 
-    meshStandard.rotation.x += params.speed;
-    meshStandard.rotation.y += params.speed;
-    meshStandard.material.bumpScale = params.bumpScale;
-    meshStandard.material.roughness = params.roughness;
-    meshStandard.material.metalness = params.shininess;
+    shape.standard.rotation.x += params.speed;
+    shape.standard.rotation.y += params.speed;
+    shape.standard.material.bumpScale = params.bumpScale;
+    shape.standard.material.roughness = params.roughness;
+    //shape.standard.material.metalness = params.shininess;
 
-    meshNormal.rotation.x += params.speed;
-    meshNormal.rotation.y += params.speed;
+    //meshNormal.rotation.x += params.speed;
+    //meshNormal.rotation.y += params.speed;
 
-    directionalLight.intensity = params.directionalLight > 0.2 ? params.directionalLight: 0;
-    directionalLight.castShadow = params.directionalLightShadow;
+    light.directionalLight.intensity = params.directionalLight > 0.2 ? params.directionalLight: 0;
+    light.directionalLight.castShadow = params.directionalLightShadow;
 
-    directionalLight.shadow.camera.near = params.near;
-    directionalLight.shadow.camera.far = params.far;
-    directionalLight.shadow.camera.fov = params.fov;
+    light.directionalLight.shadow.camera.near = params.near;
+    light.directionalLight.shadow.camera.far = params.far;
+    light.directionalLight.shadow.camera.fov = params.fov;
 
-    pointLight1.intensity = params.pointLight1Power > 0.2 ? params.pointLight1Power: 0;
-    pointLight1.castShadow = params.pointLight1Shadow;
+    light.directionalLight.bulb.material.emissiveIntensity = params.directionalLight  > 0.2 ? params.directionalLight + 0.2: 0;
+    light.directionalLight.bulb.material.opacity = params.directionalLight > 0.2 ? 1: 0.5;
 
-    pointLight1.shadow.camera.near = params.near;
-    pointLight1.shadow.camera.far = params.far;
-    pointLight1.shadow.camera.fov = params.fov;
+    for (i = 0; i < light.pointLights.length ; i++) {
+        light.pointLights[i].intensity = params.pointLight1Power > 0.2 ? params.pointLight1Power: 0;
+        light.pointLights[i].castShadow = params.pointLight1Shadow;
 
-    pointLight2.intensity = params.pointLight2Power > 0.2 ? params.pointLight2Power: 0;
-    pointLight2.castShadow = params.pointLight2Shadow;
+        light.pointLights[i].shadow.camera.near = params.near;
+        light.pointLights[i].shadow.camera.far = params.far;
+        light.pointLights[i].shadow.camera.fov = params.fov;
 
-    pointLight2.shadow.camera.near = params.near;
-    pointLight2.shadow.camera.far = params.far;
-    pointLight2.shadow.camera.fov = params.fov;
+        light.pointLights[i].bulb.material.emissiveIntensity = params.pointLight1Power  > 0.2 ? params.pointLight1Power + 0.2: 0;
+        light.pointLights[i].bulb.material.opacity = params.pointLight1Power > 0.2 ? 1: 0.5;
+    }
+
 
     stats.end();
 
@@ -98,165 +120,25 @@ function animate() {
     renderer.render( scene, camera );
 
 }
-
-function createLight() {
-    scene.add( new THREE.HemisphereLight( 0xffffff, 0x080820, 0.5 ) );
-    //--------------------------light-------------------------------
-    //scene.add( new THREE.AmbientLight( 0x404040 ) );
-
-    // White directional light at half intensity shining from the top.
-    directionalLight = new THREE.DirectionalLight(0xffffff);
-    directionalLight.position.set(300, 600, 50);
-    directionalLight.position.multiplyScalar(1.3);
-
-    scene.add(directionalLight);
-
-    var sphereDirGeometry = new THREE.SphereGeometry( 50 );
-    var sphereDirMaterial = new THREE.MeshLambertMaterial( {color: 0x444444, emissive: new THREE.Color(0xffffff), opacity: 0.3, transparent: true} );
-    sphereDir = new THREE.Mesh( sphereDirGeometry, sphereDirMaterial );
-    sphereDir.position.set(directionalLight.position.x, directionalLight.position.y, directionalLight.position.z );
-    scene.add(sphereDir);
-
-    pointLight1 = new THREE.PointLight( 0xffffff );
-    pointLight1.position.set( 200,300, 400);
-    pointLight1.angle = 180;
-    scene.add( pointLight1 );
-
-    var sphere1Geometry = new THREE.SphereGeometry( 10 );
-    var sphere1Material = new THREE.MeshLambertMaterial( {color: 0x444444, emissive: new THREE.Color(0xffffff), opacity: 0.3, transparent: true} );
-    sphere1 = new THREE.Mesh( sphere1Geometry, sphere1Material );
-    sphere1.position.set(pointLight1.position.x, pointLight1.position.y, pointLight1.position.z );
-    scene.add(sphere1);
-
-    pointLight2 = new THREE.PointLight( 0xffffff );
-    pointLight2.position.set( -200,300, -400);
-    pointLight2.angle = 180;
-
-    scene.add( pointLight2 );
-
-    var sphere2Geometry = new THREE.SphereGeometry( 10 );
-    var sphere2Material = new THREE.MeshLambertMaterial( {color: 0x444444, emissive: new THREE.Color(0xffffff), opacity: 0.3, transparent: true} );
-    sphere2 = new THREE.Mesh( sphere2Geometry, sphere2Material );
-    sphere2.position.set(pointLight2.position.x, pointLight2.position.y, pointLight2.position.z );
-    scene.add(sphere2);
-}
-function createShadow(){
-
-    var d = 2000;
-
-//directionaLight
-    directionalLight.castShadow = true;
-
-    directionalLight.shadow.mapSize.width = 1024;
-    directionalLight.shadow.mapSize.height = 1024;
-
-    directionalLight.shadow.camera.near = params.near;
-    directionalLight.shadow.camera.far = params.far;
-    directionalLight.shadow.camera.fov = params.fov;
-
-    directionalLight.shadow.camera.left = -d;
-    directionalLight.shadow.camera.right = d;
-    directionalLight.shadow.camera.top = d;
-    directionalLight.shadow.camera.bottom = -d;
-
-    directionalLight.shadow.bias = 0.001;
-
-//point light 1
-    pointLight1.castShadow = true;
-
-    pointLight1.shadow.mapSize.width = 1024;
-    pointLight1.shadow.mapSize.height = 1024;
-
-    pointLight1.shadow.camera.near = params.near;
-    pointLight1.shadow.camera.far = params.far;
-    pointLight1.shadow.camera.fov = params.fov;
-
-    pointLight1.shadow.camera.left = -d;
-    pointLight1.shadow.camera.right = d;
-    pointLight1.shadow.camera.top = d;
-    pointLight1.shadow.camera.bottom = -d;
-
-    pointLight1.shadow.bias = 0.001;
-
-//point light 2
-    pointLight2.castShadow = true;
-
-    pointLight2.shadow.mapSize.width = 1024;
-    pointLight2.shadow.mapSize.height = 1024;
-
-    pointLight2.shadow.camera.near = params.near;
-    pointLight2.shadow.camera.far = params.far;
-    pointLight2.shadow.camera.fov = params.fov;
-
-    pointLight2.shadow.camera.left = -d;
-    pointLight2.shadow.camera.right = d;
-    pointLight2.shadow.camera.top = d;
-    pointLight2.shadow.camera.bottom = -d;
-
-    pointLight2.shadow.bias = 0.001;
-
-}
 function createObjects() {
-    var shaderMaterial = new WireframeMaterial();
-    debugger;
-    //phong object
-    geometry = new THREE.BoxGeometry( 150, 150, 150 );
-    phongMaterial = new THREE.MeshPhongMaterial({
-        color      :  new THREE.Color('#FFEEB0'),
-//        emissive   :  new THREE.Color("rgb(7,3,5)"),
-//        specular   :  new THREE.Color(0xFFEEB0),
-        shininess  :  0.1,
-        map        :  textureMap['wood1'][2],
-        bumpMap  :  textureMap['wood1'][3],
-        normalMap  :  textureMap['wood1'][4],
-        bumpScale  :  0.2 });
-    meshPhong = new THREE.Mesh( geometry, phongMaterial );
-    meshPhong.position.set(300,0,0);
-    meshPhong.castShadow = true;
-    meshPhong.receiveShadow = false;
-    scene.add( meshPhong );
-
-    //standard object
-    geometry = new THREE.BoxGeometry( 150, 150, 150  );
-    stdMaterial = new THREE.MeshStandardMaterial( {
-        color: new THREE.Color('#FFEEB0'),
-        map        :  textureMap['wood1'][2],
-        bumpMap  :  textureMap['wood1'][3],
-        normalMap  :  textureMap['wood1'][4],
-        roughnessMap: textureMap['wood1'][5],
-        metalness : 0.1,
-        roughness : 0.8,
-        bumpScale  :  0.2 } );
-    meshStandard = new THREE.Mesh( geometry, stdMaterial );
-    meshStandard.position.set(-300,0,0);
-    meshStandard.castShadow = true;
-    meshStandard.receiveShadow = false;
-    scene.add( meshStandard );
 
     //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
     //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
     var planeGeometry = new THREE.BoxGeometry(2000, 2000, 10, 100, 100, 5);
     var planeMaterial = new THREE.MeshPhongMaterial( {
-        color: 0x92806d,
-        side: THREE.DoubleSide,
-        map: new THREE.TextureLoader().load( "textures/cobblestone/cobble3/Base_Color.jpg",    async function ( map ) {
-            map.name = "checker";
-            map.wrapS = map.wrapT = THREE.RepeatWrapping;
-            map.anisotropy = 16;
-            map.offset.set( 0, 0 );
-            map.repeat.set(8, 8);
-        })} );
+        color: new THREE.Color(textureMap['cobble3'][1]),
+        map        :  textureMap['cobble3'][2],
+        bumpMap  :  textureMap['cobble3'][3],
+        normalMap  :  textureMap['cobble3'][4],
+        bumpScale  :  1 }
+        );
+    planeMaterial.map.repeat.set(8, 8);
+    planeMaterial.bumpMap.repeat.set(8, 8);
+    planeMaterial.normalMap.repeat.set(8, 8);
+
     plane = new THREE.Mesh( planeGeometry, planeMaterial );
     plane.rotation.x = Math.PI / 2;
     plane.position.y = -150;
-    plane.material.normalMap = new THREE.TextureLoader().load( "textures/cobblestone/cobble3/Normal.jpg" );
-    plane.material.normalMap.wrapS = plane.material.normalMap.wrapT = THREE.RepeatWrapping;
-    plane.material.normalMap.offset.set( 0, 0 );
-    plane.material.normalMap.repeat.set(8, 8);
-    plane.material.bumpMap = new THREE.TextureLoader().load( "textures/cobblestone/cobble3/Bump.jpg" );
-    plane.material.bumpMap.wrapS = plane.material.bumpMap.wrapT = THREE.RepeatWrapping;
-    plane.material.bumpMap.offset.set( 0, 0 );
-    plane.material.bumpMap.repeat.set(8, 8);
     plane.receiveShadow = true;
     scene.add( plane );
 
@@ -264,36 +146,16 @@ function createObjects() {
     //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
     var leftWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
     var leftWallMaterial = new THREE.MeshPhongMaterial( {
-        color: 0xaf7c63,
-        side: THREE.DoubleSide,
-        map: new THREE.TextureLoader().load( "textures/bricks/bricks1/Base_Color.jpg",    async function ( map ) {
-            textureMap["checker"][2] = map;
-            map.name = "checker";
-            map.wrapS = map.wrapT = THREE.RepeatWrapping;
-            map.anisotropy = 16;
-            map.offset.set( 0, 0 );
-            map.repeat.set(8, 4);
-            //map.repeat.set(8, 8);
-        }),
-        normalMap : new THREE.TextureLoader().load( "textures/bricks/bricks1/Normal.jpg",    async function ( map ) {
-            textureMap["checker"][2] = map;
-            map.name = "checker";
-            map.wrapS = map.wrapT = THREE.RepeatWrapping;
-            map.anisotropy = 16;
-            map.offset.set( 0, 0 );
-            map.repeat.set(8, 4);
-            //map.repeat.set(8, 8);
-        }),
-        bumpMap : new THREE.TextureLoader().load( "textures/bricks/bricks1/Bump.jpg",    async function ( map ) {
-            textureMap["checker"][2] = map;
-            map.name = "checker";
-            map.wrapS = map.wrapT = THREE.RepeatWrapping;
-            map.anisotropy = 16;
-            map.offset.set( 0, 0 );
-            map.repeat.set(8, 4);
-            //map.repeat.set(8, 8);
-        })
-} );
+         color: new THREE.Color(textureMap['bricks1'][1]),
+        map        :  textureMap['bricks1'][2],
+        bumpMap  :  textureMap['bricks1'][3],
+        normalMap  :  textureMap['bricks1'][4],
+        bumpScale  :  1 }
+    );
+    leftWallMaterial.map.repeat.set(8, 4);
+    leftWallMaterial.bumpMap.repeat.set(8, 4);
+    leftWallMaterial.normalMap.repeat.set(8, 4);
+
     var leftWall = new THREE.Mesh( leftWallGeometry, leftWallMaterial );
     leftWall.rotation.y = Math.PI / 2;
     leftWall.position.x = -1000;
@@ -305,29 +167,14 @@ function createObjects() {
     //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
     var backWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
     var backWallMaterial = new THREE.MeshPhongMaterial( {
-        color: 0x92806d,
-        side: THREE.DoubleSide,
-        map: new THREE.TextureLoader().load( "textures/bricks/bricks2/Base_Color.jpg",    async function ( map ) {
-            textureMap["checker"][2] = map;
-            map.name = "checker";
-            map.wrapS = map.wrapT = THREE.RepeatWrapping;
-            map.anisotropy = 16;
-            map.repeat.set(8, 4);
-        }), normalMap: new THREE.TextureLoader().load( "textures/bricks/bricks2/Normal.jpg",    async function ( map ) {
-            textureMap["checker"][2] = map;
-            map.name = "checker";
-            map.wrapS = map.wrapT = THREE.RepeatWrapping;
-            map.anisotropy = 16;
-            map.repeat.set(8, 4);
-        }), bumpMap: new THREE.TextureLoader().load( "textures/bricks/bricks2/Bump.jpg",    async function ( map ) {
-            textureMap["checker"][2] = map;
-            map.name = "checker";
-            map.wrapS = map.wrapT = THREE.RepeatWrapping;
-            map.anisotropy = 16;
-            map.repeat.set(8, 4);
-        }),
-
-    } );
+        map : textureMap['bricks2'][2],
+        bumpMap  :  textureMap['bricks2'][3],
+        normalMap  :  textureMap['bricks2'][4],
+        bumpScale  :  1
+    });
+    backWallMaterial.map.repeat.set(8, 4);
+    backWallMaterial.bumpMap.repeat.set(8, 4);
+    backWallMaterial.normalMap.repeat.set(8, 4);
     var backWall = new THREE.Mesh( backWallGeometry, backWallMaterial );
     backWall.position.z = -1000;
     backWall.position.y = 350;
@@ -338,31 +185,15 @@ function createObjects() {
     //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
     var rightWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
     var rightWallMaterial = new THREE.MeshPhongMaterial( {
-        color: 0x92806d,
-        side: THREE.DoubleSide,
-        map: new THREE.TextureLoader().load( "textures/bricks/bricks3/Base_Color.jpg",    async function ( map ) {
-            textureMap["checker"][2] = map;
-            map.name = "checker";
-            map.wrapS = map.wrapT = THREE.RepeatWrapping;
-            map.anisotropy = 16;
-            map.repeat.set(8, 4);
-        }),
-        normalMap: new THREE.TextureLoader().load( "textures/bricks/bricks3/Normal.jpg",    async function ( map ) {
-            textureMap["checker"][2] = map;
-            map.name = "checker";
-            map.wrapS = map.wrapT = THREE.RepeatWrapping;
-            map.anisotropy = 16;
-            map.repeat.set(8, 4);
-        }),
-        bumpMap: new THREE.TextureLoader().load( "textures/bricks/bricks3/Bump.jpg",    async function ( map ) {
-            textureMap["checker"][2] = map;
-            map.name = "checker";
-            map.wrapS = map.wrapT = THREE.RepeatWrapping;
-            map.anisotropy = 16;
-            map.repeat.set(8, 4);
-        }),
-
-    } );
+        color: new THREE.Color(textureMap['bricks3'][1]),
+        map        :  textureMap['bricks3'][2],
+        bumpMap  :  textureMap['bricks3'][3],
+        normalMap  :  textureMap['bricks3'][4],
+        bumpScale  :  0.2
+    });
+    rightWallMaterial.map.repeat.set(8, 4);
+    rightWallMaterial.bumpMap.repeat.set(8, 4);
+    rightWallMaterial.normalMap.repeat.set(8, 4);
     var rightWall = new THREE.Mesh( rightWallGeometry, rightWallMaterial );
     rightWall.rotation.y = Math.PI / 2;
     rightWall.position.x = 1000;
@@ -370,7 +201,7 @@ function createObjects() {
     rightWall.receiveShadow = true;
     scene.add( rightWall );
 
-
+/*
     //normal object
     var geometry = new THREE.BoxGeometry(150, 150, 150 );
     var bufferGeometry = new THREE.BufferGeometry().fromGeometry( geometry );
@@ -380,16 +211,15 @@ function createObjects() {
             colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)},
             colorA: {type: 'vec3', value: new THREE.Color(0x74ebd5)}
         },
-        vertexShader: shaderMap["wireframe"][0],
-        fragmentShader: shaderMap["wireframe"][1]
+        vertexShader: shaderMap["wireframe"][1],
+        fragmentShader: shaderMap["wireframe"][2]
     });
 
     materialMap["wireframe"][0] = normalMaterial;
     meshNormal = new THREE.Mesh( bufferGeometry, normalMaterial );
     meshNormal.castShadow = true;
-    scene.add( meshNormal );
+    scene.add( meshNormal );*/
 }
-
 function applyMaterial(value){
     //phong
     meshPhong.material = new THREE.MeshPhongMaterial( {
@@ -414,22 +244,18 @@ function applyMaterial(value){
     meshStandard.material.needsUpdate = true;
 
     //Lambert
-    meshNormal.material = new THREE.MeshLambertMaterial( {
+/*    meshNormal.material = new THREE.MeshLambertMaterial( {
         map: textureMap[value][2],
         aoMap : textureMap[value][6]
-    });
-    materialMap["lambert"][0] = meshNormal.material;
-    meshNormal.material.needsUpdate = true;
+    });*/
+    //materialMap["lambert"][0] = meshNormal.material;
+    //meshNormal.material.needsUpdate = true;
 
     meshPhong.material.color = new THREE.Color(textureMap[value][1]);
     meshStandard.material.color = new THREE.Color(textureMap[value][1]);
-    meshNormal.material.color = new THREE.Color(textureMap[value][1]);
+    //meshNormal.material.color = new THREE.Color(textureMap[value][1]);
     meshPhong.material.name = value;
     meshStandard.material.name = value;
-    meshNormal.material.name = value;
+    //meshNormal.material.name = value;
 }
-function startApp() {
-    init();
-//    animate();
-}
-startApp();
+init();
