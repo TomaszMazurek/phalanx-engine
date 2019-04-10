@@ -52,15 +52,41 @@ class Phong extends THREE.MeshPhongMaterial{
     applyRepeat(valueX, valueY){
         this.map.repeat.set(valueX, valueY);
         this.bumpMap.repeat.set(valueX, valueY);
-        if(params.normalMap) {
+        if(params.phongNormalMap) {
             this.normalMap.repeat.set(valueX, valueY);
         }
         this.aoMap.repeat.set(valueX, valueY);
         this.specularMap.repeat.set(valueX, valueY);
     }
 
-    rotate(angle = 0, center){
-        this.map.rotation = (angle * (Math.PI/180));
+    setTexturesRotation(angle = 0){
+        var rotation = (angle * (Math.PI/180));
+        this.map.rotation = rotation;
+        if(params.phongNormalMap) {
+            this.normalMap.rotation = rotation;
+        } else {
+            this.bumpMap.rotation = rotation;
+        }
+        this.aoMap.rotation = rotation;
+        this.specularMap.rotation = rotation;
+    }
+    setTexturesCenter(centerX, centerY){
+        var center = new THREE.Vector2(centerX, centerY);
+
+        this.map.center = center;
+        if(params.phongNormalMap) {
+            this.normalMap.center.set(center);
+            this.normalMap.needsUpdate = true;
+        } else {
+            this.bumpMap.center.set(center);
+            this.bumpMap.needsUpdate = true;
+        }
+        this.aoMap.center.set(center);
+        this.specularMap.center.set(center);
+
+        this.map.needsUpdate = true;
+        this.aoMap.needsUpdate = true;
+        this.specularMap.needsUpdate = true;
     }
 
 }

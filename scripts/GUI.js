@@ -41,6 +41,8 @@ class GUI {
             metalness : 0,
             shininess : 128,
             texture: "wood1",
+            texOriginX: 0,
+            texOriginY: 0,
             texRotation: 0,
             repeatU : 2,
             repeatV : 2,
@@ -205,9 +207,23 @@ class GUI {
             shape.phong.needsUpdate = true;
             shape.standard.needsUpdate = true;
         });
+        this.textures.add(this.params, 'texOriginX',0, 360).name("origin X").onChange(function(value) {
+            shape.phong.material.setTexturesCenter(value,params.texOriginY);
+            shape.standard.material.setTexturesCenter(value, params.texOriginY);
+
+            meshPhong.material.needsUpdate = true;
+            meshStandard.material.needsUpdate = true;
+        });
+        this.textures.add(this.params, 'texOriginY',0, 360).name("origin Y").onChange(function(value) {
+            shape.phong.material.setTexturesCenter(params.texOriginX, value);
+            shape.standard.material.setTexturesCenter(params.texOriginY, value);
+
+            meshPhong.material.needsUpdate = true;
+            meshStandard.material.needsUpdate = true;
+        });
         this.textures.add(this.params, 'texRotation',0, 360).name("rotation").onChange(function(value) {
-            shape.phong.material.rotate(value, 0);
-            shape.standard.material.rotate(value, 0);
+            shape.phong.material.setTexturesRotation(value);
+            shape.standard.material.setTexturesRotation(value);
 
             meshPhong.material.needsUpdate = true;
             meshStandard.material.needsUpdate = true;

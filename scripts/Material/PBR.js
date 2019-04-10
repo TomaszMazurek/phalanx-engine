@@ -33,8 +33,6 @@ class PBR extends THREE.MeshStandardMaterial{
         this.map = textureMap[mapName][2].clone();
         this.map.needsUpdate = true;
 
-
-
         if(params.stdNormalMap){
             this.normalMap = textureMap[mapName][4].clone();
             this.normalMap.needsUpdate = true;
@@ -49,9 +47,6 @@ class PBR extends THREE.MeshStandardMaterial{
 
         this.aoMap = textureMap[mapName][6].clone();
         this.aoMap.needsUpdate = true;
-
-
-
     }
 
     applyRepeat(valueX, valueY){
@@ -62,7 +57,33 @@ class PBR extends THREE.MeshStandardMaterial{
         }
     }
 
-    rotate(angle = 0, center){
-        this.map.rotation = (angle * (Math.PI/180));
+    setTexturesRotation(angle = 0){
+        var rotation = (angle * (Math.PI/180));
+        this.map.rotation = rotation;
+        if(params.stdNormalMap) {
+            this.normalMap.rotation = rotation;
+        } else {
+            this.bumpMap.rotation = rotation;
+        }
+        this.roughnessMap.rotation = rotation;
+        this.aoMap.rotation = rotation;
+    }
+    setTexturesCenter(centerX, centerY){
+        var center = new THREE.Vector2(centerX, centerY);
+        this.map.center = center;
+        if(params.phongNormalMap) {
+            this.normalMap.center.set(center);
+            this.normalMap.needsUpdate = true;
+
+        } else {
+            this.bumpMap.center.set(center);
+            this.bumpMap.needsUpdate = true;
+        }
+        this.roughnessMap.center.set(center);
+        this.aoMap.center.set(center);
+
+        this.map.needsUpdate = true;
+        this.aoMap.needsUpdate = true;
+        this.roughnessMap.needsUpdate = true;
     }
 }
