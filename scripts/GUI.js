@@ -114,6 +114,7 @@ class GUI {
                 meshPhong.material.normalMap.needsUpdate = true;
             } else {
                 meshPhong.material.normalMap = null;
+                meshPhong.material.bumpMap = textureMap[params.texture][4].clone();
                 meshPhong.material.bumpMap.needsUpdate = true;
             }
             meshPhong.material.needsUpdate = true;
@@ -157,6 +158,7 @@ class GUI {
                 meshStandard.material.normalMap.needsUpdate = true;
             } else {
                 meshStandard.material.normalMap = null;
+                meshStandard.material.bumpMap = textureMap[params.texture][4].clone();
                 meshStandard.material.bumpMap.needsUpdate = true;
             }
             meshStandard.material.needsUpdate = true;
@@ -203,7 +205,6 @@ class GUI {
             shape.phong.needsUpdate = true;
             shape.standard.needsUpdate = true;
         });
-
         this.textures.add(this.params, 'texRotation',0, 360).name("rotation").onChange(function(value) {
             shape.phong.material.rotate(value, 0);
             shape.standard.material.rotate(value, 0);
