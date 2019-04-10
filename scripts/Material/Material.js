@@ -1,5 +1,6 @@
-class Materials{
+class Material extends THREE.Material{
     constructor(){
+        super();
         this.materialMap = {
             wireframe: [undefined, undefined],
             phong: [undefined, undefined],
@@ -7,4 +8,5 @@ class Materials{
             lambert: [undefined, undefined],
         };
     }
+
 }

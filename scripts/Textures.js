@@ -1,20 +1,20 @@
 class Textures {
     constructor() {
         this.textureMap = {
-            wood1: ["textures/wood/wood1/", 0xFFEEB0, undefined, undefined, undefined, undefined, undefined],
-            wood2: ["textures/wood/wood2/", 0xa0522d, undefined, undefined, undefined, undefined, undefined],
-            wood3: ["textures/wood/wood3/", 0xCD8500, undefined, undefined, undefined, undefined, undefined],
-            cobble1: ["textures/cobblestone/cobble1/", 0x92806d, undefined, undefined, undefined, undefined, undefined],
-            cobble2: ["textures/cobblestone/cobble2/", 0x878481, undefined, undefined, undefined, undefined, undefined],
-            cobble3: ["textures/cobblestone/cobble3/", 0x95908c, undefined, undefined, undefined, undefined, undefined],
-            roof1: ["textures/roofing/roof1/", 0xdeaf8a, undefined, undefined, undefined, undefined, undefined],
-            roof2: ["textures/roofing/roof2/", 0xc5976d, undefined, undefined, undefined, undefined, undefined],
-            roof3: ["textures/roofing/roof3/", 0xa37862, undefined, undefined, undefined, undefined, undefined],
-            bricks1: ["textures/bricks/bricks1/", 0xaf7c63, undefined, undefined, undefined, undefined, undefined],
-            bricks2: ["textures/bricks/bricks2/", 0xb4705f, undefined, undefined, undefined, undefined, undefined],
-            bricks3: ["textures/bricks/bricks3/", 0xb18a6f, undefined, undefined, undefined, undefined, undefined],
-            iceTexture: ["textures/others/iceTexture/", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined],
-        };//baseColor - 2, bumpMap - 3, normalMap - 4, roughnessMap - 5, aoMap - 6
+            wood1: ["textures/wood/wood1/", 0xFFEEB0, undefined, undefined, undefined, undefined, undefined, undefined],
+            wood2: ["textures/wood/wood2/", 0xa0522d, undefined, undefined, undefined, undefined, undefined, undefined],
+            wood3: ["textures/wood/wood3/", 0xCD8500, undefined, undefined, undefined, undefined, undefined, undefined],
+            cobble1: ["textures/cobblestone/cobble1/", 0x92806d, undefined, undefined, undefined, undefined, undefined, undefined],
+            cobble2: ["textures/cobblestone/cobble2/", 0x878481, undefined, undefined, undefined, undefined, undefined, undefined],
+            cobble3: ["textures/cobblestone/cobble3/", 0x95908c, undefined, undefined, undefined, undefined, undefined, undefined],
+            roof1: ["textures/roofing/roof1/", 0xdeaf8a, undefined, undefined, undefined, undefined, undefined, undefined],
+            roof2: ["textures/roofing/roof2/", 0xc5976d, undefined, undefined, undefined, undefined, undefined, undefined],
+            roof3: ["textures/roofing/roof3/", 0xa37862, undefined, undefined, undefined, undefined, undefined, undefined],
+            bricks1: ["textures/bricks/bricks1/", 0xaf7c63, undefined, undefined, undefined, undefined, undefined, undefined],
+            bricks2: ["textures/bricks/bricks2/", 0xb4705f, undefined, undefined, undefined, undefined, undefined, undefined],
+            bricks3: ["textures/bricks/bricks3/", 0xb18a6f, undefined, undefined, undefined, undefined, undefined, undefined],
+            iceTexture: ["textures/others/iceTexture/", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined, undefined],
+        };//baseColor - 2, bumpMap - 3, normalMap - 4, roughnessMap - 5, aoMap - 6, displacement - 7
     }
 
     async populate(){
@@ -39,7 +39,7 @@ class Textures {
         for (i = 0; i < keyArray.length; i++) {
             var key = keyArray[i];
             var texturePromise = new Promise(resolve => {
-                new THREE.TextureLoader().load( self.textureMap[key][0] + "Displacement.jpg", resolve);
+                new THREE.TextureLoader().load( self.textureMap[key][0] + "Glossiness.jpg", resolve);
             });
             texture = await texturePromise;
             this.textureMap[keyArray[i]][3] = texture;
@@ -87,6 +87,19 @@ class Textures {
             this.textureMap[keyArray[i]][6].wrapS = THREE.RepeatWrapping;
             this.textureMap[keyArray[i]][6].wrapT = THREE.RepeatWrapping;
             this.textureMap[keyArray[i]][6].repeat.set( 1, 1 );
+        }
+
+        for (i = 0; i < keyArray.length; i++) {
+            var key = keyArray[i];
+            var texturePromise = new Promise(resolve => {
+                new THREE.TextureLoader().load( self.textureMap[key][0] + "Displacement.jpg", resolve);
+            });
+            texture = await texturePromise;
+            this.textureMap[keyArray[i]][7] = texture;
+            this.textureMap[keyArray[i]][7].name = key+"_displacement";
+            this.textureMap[keyArray[i]][7].wrapS = THREE.RepeatWrapping;
+            this.textureMap[keyArray[i]][7].wrapT = THREE.RepeatWrapping;
+            this.textureMap[keyArray[i]][7].repeat.set( 1, 1 );
         }
 
         return this.textureMap;

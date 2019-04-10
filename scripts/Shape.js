@@ -5,7 +5,6 @@ class Shape {
         this.create();
     }
 
-
     getGeometry() {
         switch (selectedShape) {
             case "Box" :
@@ -41,7 +40,6 @@ class Shape {
             case 'TorusKnot':
                 return new THREE.TorusKnotGeometry( 100, 40, 16, 100 );
                 break;
-
         }
     }
 
