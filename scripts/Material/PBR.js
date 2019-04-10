@@ -33,12 +33,15 @@ class PBR extends THREE.MeshStandardMaterial{
         this.map = textureMap[mapName][2].clone();
         this.map.needsUpdate = true;
 
-        this.bumpMap = textureMap[mapName][3].clone();
-        this.bumpMap.needsUpdate = true;
 
-        if(params.normalMap){
+
+        if(params.stdNormalMap){
             this.normalMap = textureMap[mapName][4].clone();
             this.normalMap.needsUpdate = true;
+        } else {
+            this.normalMap = null;
+            this.bumpMap = textureMap[mapName][4].clone();
+            this.bumpMap.needsUpdate = true;
         }
 
         this.roughnessMap = textureMap[mapName][5].clone();
@@ -57,5 +60,9 @@ class PBR extends THREE.MeshStandardMaterial{
         if(params.normalMap) {
             this.normalMap.repeat.set(valueX, valueY);
         }
+    }
+
+    rotate(angle = 0, center){
+        this.map.rotation = (angle * (Math.PI/180));
     }
 }

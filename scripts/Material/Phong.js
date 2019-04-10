@@ -32,18 +32,20 @@ class Phong extends THREE.MeshPhongMaterial{
         this.specular = new THREE.Color(textureMap['wood1'][1]);
 
         this.map = textureMap[mapName][2].clone();
-        this.bumpMap = textureMap[mapName][3].clone();
         this.aoMap = textureMap[mapName][6].clone();
         this.specularMap = textureMap[mapName][6].clone();
 
         this.map.needsUpdate = true;
-        this.bumpMap.needsUpdate = true;
         this.aoMap.needsUpdate = true;
         this.specularMap.needsUpdate = true;
 
-        if(params.normalMap){
+        if(params.phongNormalMap){
             this.normalMap = textureMap[mapName][4].clone();
             this.normalMap.needsUpdate = true;
+        } else {
+            this.normalMap = null;
+            this.bumpMap = textureMap[mapName][4].clone();
+            this.bumpMap.needsUpdate = true;
         }
     }
 
@@ -55,6 +57,10 @@ class Phong extends THREE.MeshPhongMaterial{
         }
         this.aoMap.repeat.set(valueX, valueY);
         this.specularMap.repeat.set(valueX, valueY);
+    }
+
+    rotate(angle = 0, center){
+        this.map.rotation = (angle * (Math.PI/180));
     }
 
 }

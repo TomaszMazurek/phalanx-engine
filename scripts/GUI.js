@@ -205,9 +205,8 @@ class GUI {
         });
 
         this.textures.add(this.params, 'texRotation',0, 360).name("rotation").onChange(function(value) {
-
-            shape.phong.material.applyRepeat(value, repeatV);
-            shape.standard.material.applyRepeat(value, repeatV);
+            shape.phong.material.rotate(value, 0);
+            shape.standard.material.rotate(value, 0);
 
             meshPhong.material.needsUpdate = true;
             meshStandard.material.needsUpdate = true;
