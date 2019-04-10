@@ -9,10 +9,10 @@ class Shape {
     getGeometry() {
         switch (selectedShape) {
             case "Box" :
-                return new THREE.BoxGeometry(150,150,150);
+                return new THREE.BoxGeometry(170,170,170);
                 break;
             case "Circle":
-                return new THREE.CircleGeometry( 150, 32 );
+                return new THREE.CircleGeometry( 170, 32 );
                 break;
             case 'Cone':
                 return new THREE.ConeGeometry( 150, 200, 32 );
@@ -30,7 +30,7 @@ class Shape {
                 return new THREE.OctahedronGeometry( 150 );
                 break;
             case 'Sphere':
-                return new THREE.SphereGeometry( 100, 32, 32 );
+                return new THREE.SphereGeometry( 120, 32, 32 );
                 break;
             case 'Tetrahedron':
                 return new THREE.TetrahedronGeometry( 150 );
@@ -46,21 +46,7 @@ class Shape {
     }
 
     create(){
-        phongMaterial = new THREE.MeshPhongMaterial({
-            color      :  new THREE.Color(textureMap['wood1'][1]),
-            shininess  :  0.1,
-            map        :  textureMap['wood1'][2],
-            bumpMap  :  textureMap['wood1'][3],
-            normalMap  :  textureMap['wood1'][4],
-            aoMap  :  textureMap['wood1'][6],
-            bumpScale  :  1,
-            specular : 0.1,
-            side : THREE.DoubleSide
-        });
-
-        phongMaterial.map.repeat.set(1, 1);
-        phongMaterial.bumpMap.repeat.set(1, 1);
-        phongMaterial.normalMap.repeat.set(1, 1);
+        phongMaterial = new Phong();
 
         meshPhong = new THREE.Mesh( this.getGeometry(), phongMaterial );
         meshPhong.position.set(200,50,0);
@@ -69,24 +55,7 @@ class Shape {
         scene.add( meshPhong );
         this.phong = meshPhong;
 
-        stdMaterial = new THREE.MeshStandardMaterial( {
-            color: new THREE.Color(textureMap['wood1'][1]),
-            map        :  textureMap['wood1'][2],
-            bumpMap  :  textureMap['wood1'][3],
-            normalMap  :  textureMap['wood1'][4],
-            roughnessMap: textureMap['wood1'][5],
-            aoMap: textureMap['wood1'][6],
-            metalness : 0.1,
-            roughness : 0.8,
-            bumpScale  :  1,
-            side : THREE.DoubleSide
-
-        } );
-
-        stdMaterial.map.repeat.set(1, 1);
-        stdMaterial.bumpMap.repeat.set(1, 1);
-        stdMaterial.normalMap.repeat.set(1, 1);
-        stdMaterial.roughnessMap.repeat.set(1, 1);
+        stdMaterial = new PBR();
 
         meshStandard = new THREE.Mesh( this.getGeometry(), stdMaterial );
         meshStandard.position.set(-200,50,0);
@@ -101,11 +70,14 @@ class Shape {
         this.phong.geometry.dispose();
         this.phong.geometry = this.getGeometry();
         this.phong.geometry.needsUpdate = true;
+        shape.phong.material.applyRepeat(params.repeatU, params.repeatV);
         this.phong.material.needsUpdate = true;
 
         this.standard.geometry.dispose();
         this.standard.geometry = this.getGeometry();
         this.standard.geometry.needsUpdate = true;
+        shape.standard.material.applyRepeat(params.repeatU, params.repeatV);
         this.standard.material.needsUpdate = true;
     }
+
 }

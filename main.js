@@ -2,17 +2,11 @@ var i, textures, shaders, textureMap, shaderMap, stats,  gui, params;
 var scene, camera, renderer, controls;
 var geometry, material, plane, texture,
     normalMap, specularMap, roughnessMap,
-    mesh, phongMaterial, stdMaterial, normalMaterial,
-    meshPhong, meshStandard, meshNormal,
+    mesh, phongMaterial, stdMaterial,
+    meshPhong, meshStandard,
     light, selectedShape, shape,
     near,far, fov;
 
-var materialMap =  {
-    wireframe: [undefined, undefined],
-    phong: [undefined, undefined],
-    pbr: [undefined, undefined],
-    lambert: [undefined, undefined],
-};
 
 async function init() {
     textures = new Textures();
@@ -27,7 +21,6 @@ async function init() {
     renderer = sceneObject.renderer;
     controls = sceneObject.controls;
 
-
         return new GUI(camera).init().then(function (result) {
             gui = result.gui;
             stats = result.stats;
@@ -35,7 +28,14 @@ async function init() {
             selectedShape = params.shape;
 
             result.textureEvent.onChange(function(value) {
-                applyMaterial(value);
+                shape.phong.material.applyMaps(value);
+                shape.standard.material.applyMaps(value);
+
+                shape.phong.material.applyRepeat(params.repeatU, params.repeatV);
+                shape.standard.material.applyRepeat(params.repeatU, params.repeatV);
+
+                shape.phong.needsUpdate = true;
+                shape.standard.needsUpdate = true;
             });
             result.shapeEvent.onChange(function(value) {
                 selectedShape = value;
@@ -48,6 +48,8 @@ async function init() {
             light.createPointLight(0xffffff, new THREE.Vector3(300, 300, 300));
             light.createPointLight(0xffffff, new THREE.Vector3(-300, 300, -300));
             shape = new Shape();
+            shape.phong.needsUpdate = true;
+            shape.standard.needsUpdate = true;
             createObjects();
 
             document.getElementById("scene-container").appendChild( renderer.domElement );
@@ -64,31 +66,11 @@ function animate() {
 
     stats.begin();
 
-/*
-    sphereDir.material.emissiveIntensity = params.directionalLight  > 0.2 ? params.directionalLight + 0.2: 0;
-    sphereDir.material.opacity = params.directionalLight > 0.2 ? 1: 0.5;
-
-    sphere1.material.emissiveIntensity = params.pointLight1Power  > 0.2 ? params.pointLight2Power + 0.2: 0;
-    sphere1.material.opacity = params.pointLight1Power > 0.2 ? 1: 0.5;
-
-    sphere2.material.emissiveIntensity = params.pointLight2Power > 0.2 ? params.pointLight2Power + 0.2: 0;
-    sphere2.material.opacity = params.pointLight2Power > 0.2 ? 1: 0.5;
-*/
-
     shape.phong.rotation.x += params.speed;
     shape.phong.rotation.y += params.speed;
-    shape.phong.material.bumpScale = params.bumpScale;
-    //shape.phong.material.reflectivity = params.roughness;
-    shape.phong.material.shininess = params.shininess * 100 + 20 * params.shininess;
 
     shape.standard.rotation.x += params.speed;
     shape.standard.rotation.y += params.speed;
-    shape.standard.material.bumpScale = params.bumpScale;
-    shape.standard.material.roughness = params.roughness;
-    //shape.standard.material.metalness = params.shininess;
-
-    //meshNormal.rotation.x += params.speed;
-    //meshNormal.rotation.y += params.speed;
 
     light.directionalLight.intensity = params.directionalLight > 0.2 ? params.directionalLight: 0;
     light.directionalLight.castShadow = params.directionalLightShadow;
@@ -112,7 +94,6 @@ function animate() {
         light.pointLights[i].bulb.material.opacity = params.pointLight1Power > 0.2 ? 1: 0.5;
     }
 
-
     stats.end();
 
     requestAnimationFrame( animate );
@@ -123,18 +104,21 @@ function animate() {
 function createObjects() {
 
     //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
-    //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
     var planeGeometry = new THREE.BoxGeometry(2000, 2000, 10, 100, 100, 5);
     var planeMaterial = new THREE.MeshPhongMaterial( {
         color: new THREE.Color(textureMap['cobble3'][1]),
-        map        :  textureMap['cobble3'][2],
-        bumpMap  :  textureMap['cobble3'][3],
-        normalMap  :  textureMap['cobble3'][4],
+        map        :  textureMap['cobble3'][2].clone(),
+        bumpMap  :  textureMap['cobble3'][3].clone(),
+        normalMap  :  textureMap['cobble3'][4].clone(),
         bumpScale  :  1 }
         );
+
     planeMaterial.map.repeat.set(8, 8);
+    planeMaterial.map.needsUpdate = true;
     planeMaterial.bumpMap.repeat.set(8, 8);
+    planeMaterial.bumpMap.needsUpdate = true;
     planeMaterial.normalMap.repeat.set(8, 8);
+    planeMaterial.normalMap.needsUpdate = true;
 
     plane = new THREE.Mesh( planeGeometry, planeMaterial );
     plane.rotation.x = Math.PI / 2;
@@ -143,18 +127,20 @@ function createObjects() {
     scene.add( plane );
 
     //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
-    //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
     var leftWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
     var leftWallMaterial = new THREE.MeshPhongMaterial( {
          color: new THREE.Color(textureMap['bricks1'][1]),
-        map        :  textureMap['bricks1'][2],
-        bumpMap  :  textureMap['bricks1'][3],
-        normalMap  :  textureMap['bricks1'][4],
+        map        :  textureMap['bricks1'][2].clone(),
+        bumpMap  :  textureMap['bricks1'][3].clone(),
+        normalMap  :  textureMap['bricks1'][4].clone(),
         bumpScale  :  1 }
     );
-    leftWallMaterial.map.repeat.set(8, 4);
-    leftWallMaterial.bumpMap.repeat.set(8, 4);
-    leftWallMaterial.normalMap.repeat.set(8, 4);
+    leftWallMaterial.map.repeat.set(8, 8);
+    leftWallMaterial.map.needsUpdate = true;
+    leftWallMaterial.bumpMap.repeat.set(8, 8);
+    leftWallMaterial.bumpMap.needsUpdate = true;
+    leftWallMaterial.normalMap.repeat.set(8, 8);
+    leftWallMaterial.normalMap.needsUpdate = true;
 
     var leftWall = new THREE.Mesh( leftWallGeometry, leftWallMaterial );
     leftWall.rotation.y = Math.PI / 2;
@@ -164,17 +150,22 @@ function createObjects() {
     scene.add( leftWall );
 
     //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
-    //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
     var backWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
     var backWallMaterial = new THREE.MeshPhongMaterial( {
-        map : textureMap['bricks2'][2],
-        bumpMap  :  textureMap['bricks2'][3],
-        normalMap  :  textureMap['bricks2'][4],
+        color: new THREE.Color(textureMap['bricks2'][1]),
+        map : textureMap['bricks2'][2].clone(),
+        bumpMap  :  textureMap['bricks2'][3].clone(),
+        normalMap  :  textureMap['bricks2'][4].clone(),
         bumpScale  :  1
     });
-    backWallMaterial.map.repeat.set(8, 4);
-    backWallMaterial.bumpMap.repeat.set(8, 4);
-    backWallMaterial.normalMap.repeat.set(8, 4);
+
+    backWallMaterial.map.repeat.set(8, 8);
+    backWallMaterial.map.needsUpdate = true;
+    backWallMaterial.bumpMap.repeat.set(8, 8);
+    backWallMaterial.bumpMap.needsUpdate = true;
+    backWallMaterial.normalMap.repeat.set(8, 8);
+    backWallMaterial.normalMap.needsUpdate = true;
+
     var backWall = new THREE.Mesh( backWallGeometry, backWallMaterial );
     backWall.position.z = -1000;
     backWall.position.y = 350;
@@ -182,80 +173,27 @@ function createObjects() {
     scene.add( backWall );
 
     //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
-    //var planeGeometry = new THREE.PlaneGeometry( 2000, 2000);
     var rightWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
     var rightWallMaterial = new THREE.MeshPhongMaterial( {
         color: new THREE.Color(textureMap['bricks3'][1]),
-        map        :  textureMap['bricks3'][2],
-        bumpMap  :  textureMap['bricks3'][3],
-        normalMap  :  textureMap['bricks3'][4],
+        map        :  textureMap['bricks3'][2].clone(),
+        bumpMap  :  textureMap['bricks3'][3].clone(),
+        normalMap  :  textureMap['bricks3'][4].clone(),
         bumpScale  :  0.2
     });
-    rightWallMaterial.map.repeat.set(8, 4);
-    rightWallMaterial.bumpMap.repeat.set(8, 4);
-    rightWallMaterial.normalMap.repeat.set(8, 4);
+
+    rightWallMaterial.map.repeat.set(8, 8);
+    rightWallMaterial.map.needsUpdate = true;
+    rightWallMaterial.bumpMap.repeat.set(8, 8);
+    rightWallMaterial.bumpMap.needsUpdate = true;
+    rightWallMaterial.normalMap.repeat.set(8, 8);
+    rightWallMaterial.normalMap.needsUpdate = true;
+
     var rightWall = new THREE.Mesh( rightWallGeometry, rightWallMaterial );
     rightWall.rotation.y = Math.PI / 2;
     rightWall.position.x = 1000;
     rightWall.position.y = 350;
     rightWall.receiveShadow = true;
     scene.add( rightWall );
-
-/*
-    //normal object
-    var geometry = new THREE.BoxGeometry(150, 150, 150 );
-    var bufferGeometry = new THREE.BufferGeometry().fromGeometry( geometry );
-
-    normalMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-            colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)},
-            colorA: {type: 'vec3', value: new THREE.Color(0x74ebd5)}
-        },
-        vertexShader: shaderMap["wireframe"][1],
-        fragmentShader: shaderMap["wireframe"][2]
-    });
-
-    materialMap["wireframe"][0] = normalMaterial;
-    meshNormal = new THREE.Mesh( bufferGeometry, normalMaterial );
-    meshNormal.castShadow = true;
-    scene.add( meshNormal );*/
-}
-function applyMaterial(value){
-    //phong
-    meshPhong.material = new THREE.MeshPhongMaterial( {
-        map: textureMap[value][2],
-        bumpMap: textureMap[value][3],
-        normalMap : textureMap[value][4],
-        specularMap : textureMap[value][5],
-        aoMap : textureMap[value][6]
-    });
-    materialMap["phong"][0] = meshPhong.material;
-    meshPhong.material.needsUpdate = true;
-
-    //PBR
-    meshStandard.material = new THREE.MeshStandardMaterial( {
-        map: textureMap[value][2],
-        bumpMap : textureMap[value][3],
-        normalMap : textureMap[value][4],
-        roughnessMap : textureMap[value][5],
-        aoMap : textureMap[value][6]
-    });
-    materialMap["pbr"][0] = meshStandard.material;
-    meshStandard.material.needsUpdate = true;
-
-    //Lambert
-/*    meshNormal.material = new THREE.MeshLambertMaterial( {
-        map: textureMap[value][2],
-        aoMap : textureMap[value][6]
-    });*/
-    //materialMap["lambert"][0] = meshNormal.material;
-    //meshNormal.material.needsUpdate = true;
-
-    meshPhong.material.color = new THREE.Color(textureMap[value][1]);
-    meshStandard.material.color = new THREE.Color(textureMap[value][1]);
-    //meshNormal.material.color = new THREE.Color(textureMap[value][1]);
-    meshPhong.material.name = value;
-    meshStandard.material.name = value;
-    //meshNormal.material.name = value;
 }
 init();

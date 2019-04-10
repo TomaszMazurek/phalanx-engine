@@ -39,7 +39,7 @@ class Textures {
         for (i = 0; i < keyArray.length; i++) {
             var key = keyArray[i];
             var texturePromise = new Promise(resolve => {
-                new THREE.TextureLoader().load( self.textureMap[key][0] + "Bump.jpg", resolve);
+                new THREE.TextureLoader().load( self.textureMap[key][0] + "Displacement.jpg", resolve);
             });
             texture = await texturePromise;
             this.textureMap[keyArray[i]][3] = texture;

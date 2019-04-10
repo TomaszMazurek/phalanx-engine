@@ -27,21 +27,22 @@ class GUI {
             speed : 0.001,
             pointLight1Power: 0.5,
             pointLight1Shadow: true,
-            pointLight2Power: 0.5,
-            pointLight2Shadow: true,
             directionalLight: 0.7,
             directionalLightShadow: true,
-            bumpScale : 1.0,
-            roughness : 1,
-            shininess : 0.0,
+            bumpScaleX : 1.0,
+            bumpScaleY : 1.0,
+            roughness : 0.8,
+            metalness : 0,
+            shininess : 128,
             texture: "wood1",
-            repeatU : 1,
-            repeatV : 1,
-            shape: "Box",
+            texRotation: 0,
+            repeatU : 2,
+            repeatV : 2,
+            shape: "Sphere",
             near : 500,
             far : 25000,
             fov : 30,
-            add: function(){ console.log() }
+            add: function(){ console.log() },
         };
 
         this.stats = new Stats();
@@ -54,11 +55,51 @@ class GUI {
         this.view = this.gui.addFolder('Camera');
         this.lights = this.gui.addFolder('Lights');
         this.textures = this.gui.addFolder('Textures');
+
         this.material = this.gui.addFolder('Material');
+        this.material.add(this.params, 'bumpScaleX', -1.0, 1.0).name("bump scale X").onChange(function(value) {
+            var bumpScaleY = meshPhong.material.normalScale.y;
+
+         meshPhong.material.normalScale.set(value,bumpScaleY);
+         meshStandard.material.normalScale.set(value, bumpScaleY);
+
+         meshPhong.material.needsUpdate = true;
+         meshStandard.material.needsUpdate = true;
+        });
+
+        this.material.add(this.params, 'bumpScaleY', -1.0, 1.0).name("bump scale Y").onChange(function(value) {
+            var bumpScaleX = meshPhong.material.normalScale.x;
+         meshPhong.material.normalScale.set(bumpScaleX,value);
+         meshStandard.material.normalScale.set(bumpScaleX, value);
+
+         meshPhong.material.needsUpdate = true;
+         meshStandard.material.needsUpdate = true;
+        });
+
+        this.material.phong = this.material.addFolder('Phong');
+        this.material.PBR = this.material.addFolder('PBR');
+
 
         this.minMaxGUIHelper = new MinMaxGUIHelper(camera, 'near', 'far', 0.1);
         this.textureEvent = this.textures.add(this.params, 'texture', [ 'wood1', 'wood2','wood3', 'cobble1','cobble2',
             'cobble3','roof1', 'roof2','roof3', 'bricks1','bricks2', 'bricks3', 'iceTexture'] );
+        this.textures.add(this.params, 'texRotation',0, 360).name("rotation");
+        this.textures.add(this.params, 'repeatU',1, 50).name("repeat U").onChange(function(value) {
+            var repeatV = shape.phong.material.map.repeat.y;
+            shape.phong.material.applyRepeat(value, repeatV);
+            shape.standard.material.applyRepeat(value, repeatV);
+
+            meshPhong.material.needsUpdate = true;
+            meshStandard.material.needsUpdate = true;
+        });
+        this.textures.add(this.params, 'repeatV',1, 50).name("repeat V").onChange(function(value) {
+            var repeatU = shape.phong.material.map.repeat.x;
+            shape.phong.material.applyRepeat(repeatU, value);
+            shape.standard.material.applyRepeat(repeatU, value);
+
+            meshPhong.material.needsUpdate = true;
+            meshStandard.material.needsUpdate = true;
+        });
 
     }
 
@@ -76,14 +117,16 @@ class GUI {
 
         this.lights.add(this.params, 'pointLight1Power', 0.0, 3.0);
         this.lights.add(this.params, 'pointLight1Shadow');
-        this.lights.add(this.params, 'pointLight2Power', 0.0, 3.0);
-        this.lights.add(this.params, 'pointLight2Shadow');
         this.lights.add(this.params, 'directionalLight', 0.0, 3.0);
         this.lights.add(this.params, 'directionalLightShadow');
 
-        this.material.add(this.params, 'bumpScale', -1.0, 1.0);
-        this.material.add(this.params, 'roughness', 0.001, 1.0);
-        this.material.add(this.params, 'shininess', 0.0, 10.0);
+        this.material.PBR.add(this.params, 'roughness', 0, 1.0);
+        this.material.PBR.add(this.params, 'metalness', 0, 1.0);
+
+        this.material.phong.add(this.params, 'shininess', 0, 1000.0).onChange(function(value) {
+            meshPhong.material.shininess = value;
+            meshPhong.material.needsUpdate = true;
+        });
 
         return this;
     }
