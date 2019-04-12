@@ -74,7 +74,6 @@ class PBR extends THREE.MeshStandardMaterial{
         if(params.phongNormalMap) {
             this.normalMap.center.set(center);
             this.normalMap.needsUpdate = true;
-
         } else {
             this.bumpMap.center.set(center);
             this.bumpMap.needsUpdate = true;

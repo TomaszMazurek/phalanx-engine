@@ -1,7 +1,8 @@
 class Shape {
     constructor(){
         this.phong = null;
-        this.standard = null
+        this.standard = null;
+        this.shader = null;
         this.create();
     }
 
@@ -47,16 +48,28 @@ class Shape {
         phongMaterial = new Phong();
 
         meshPhong = new THREE.Mesh( this.getGeometry(), phongMaterial );
-        meshPhong.position.set(200,50,0);
+        meshPhong.position.set(300,50,0);
         meshPhong.castShadow = true;
         meshPhong.receiveShadow = false;
         scene.add( meshPhong );
         this.phong = meshPhong;
 
-        stdMaterial = new PBR();
+        shaderMaterial = new Shader();
+        var shaderGeometry = new THREE.BufferGeometry();
+        meshShader = new THREE.Mesh( shaderGeometry.fromGeometry(this.getGeometry()), shaderMaterial );
+        meshShader.position.set(0,50,0);
+        meshShader.castShadow = true;
+        meshShader.receiveShadow = false;
+        meshShader.material.needsUpdate = true;
+        this.shader = meshShader;
+        this.shader.material.uniforms.map.needsUpdate = true;
+        this.shader.material.needsUpdate = true;
+        scene.add( meshShader );
 
+
+        stdMaterial = new PBR();
         meshStandard = new THREE.Mesh( this.getGeometry(), stdMaterial );
-        meshStandard.position.set(-200,50,0);
+        meshStandard.position.set(-300,50,0);
         meshStandard.castShadow = true;
         meshStandard.receiveShadow = false;
         scene.add( meshStandard );

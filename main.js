@@ -2,8 +2,8 @@ var i, textures, textureMap, shaderMap, stats,  gui, params;
 var scene, camera, renderer, controls;
 var geometry, material, plane, texture,
     normalMap, specularMap, roughnessMap,
-    mesh, phongMaterial, stdMaterial,
-    meshPhong, meshStandard,
+    mesh, phongMaterial, shaderMaterial, stdMaterial,
+    meshPhong,meshShader, meshStandard,
     light, selectedShape, shape,
     near,far, fov;
 
@@ -49,6 +49,10 @@ function animate() {
 
     shape.phong.rotation.x += params.speed;
     shape.phong.rotation.y += params.speed;
+
+    shape.shader.rotation.x += params.speed;
+    shape.shader.rotation.y += params.speed;
+    shape.shader.material.needsUpdate = true;
 
     shape.standard.rotation.x += params.speed;
     shape.standard.rotation.y += params.speed;
