@@ -52,7 +52,6 @@ function animate() {
 
     shape.shader.rotation.x += params.speed;
     shape.shader.rotation.y += params.speed;
-    shape.shader.material.needsUpdate = true;
 
     shape.standard.rotation.x += params.speed;
     shape.standard.rotation.y += params.speed;

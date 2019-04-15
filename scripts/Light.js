@@ -51,6 +51,7 @@ class Light {
             this.directionalLight.shadow.camera.bottom = -this.shadowDiameter;
 
             this.directionalLight.shadow.bias = 0.001;
+            this.directionalLight.intensity = params.directionalLightPower;
         this.createBulb(this.directionalLight, 50);
         scene.add(this.directionalLight);
     }
@@ -78,6 +79,7 @@ class Light {
             pointLight.shadow.camera.bottom = -this.shadowDiameter;
 
             pointLight.shadow.bias = 0.001;
+            pointLight.intensity = params.pointLightPower;
             this.pointLights.push(pointLight);
             scene.add(pointLight);
             this.createBulb(pointLight, 10);

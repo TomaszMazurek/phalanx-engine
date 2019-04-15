@@ -28,12 +28,14 @@ class GUI {
 
         this.params = {
             speed : 0.001,
-            pointLightPower: 0.5,
+            pointLightPower: 0,
             pointLightShadow: true,
             directionalLightPower: 0.7,
             directionalLightShadow: true,
             phongBumpScaleX : 1.0,
             phongBumpScaleY : 1.0,
+            shaderBumpScaleX : 1.0,
+            shaderBumpScaleY : 1.0,
             stdBumpScaleX : 1.0,
             stdBumpScaleY : 1.0,
             ao: 1,
@@ -44,9 +46,10 @@ class GUI {
             texOriginX: 0,
             texOriginY: 0,
             texRotation: 0,
-            repeatU : 2,
-            repeatV : 2,
+            repeatU : 1,
+            repeatV : 1,
             phongNormalMap: true,
+            shaderNormalMap: true,
             stdNormalMap: true,
             shape: "Sphere",
             near : 500,
@@ -144,6 +147,39 @@ class GUI {
             meshPhong.material.needsUpdate = true;
         });
 
+        this.material.shader = this.material.addFolder('Shader');
+        this.material.shader.add(this.params, 'shininess', 0, 500.0).onChange(function(value) {
+            meshShader.material.uniforms.shininess.value = value;
+            meshShader.material.uniforms.needsUpdate = true;
+        });
+        this.material.shader.add(this.params, 'shaderNormalMap', 0, 1000.0).name("Normal Map").onChange(function(value) {
+            shape.shader.material.dispose();
+            shape.shader.material = new Shader();
+            shape.shader.material.defaultAttributeValues.uv = new Float32Array(shape.shader.geometry.attributes.uv.array);
+            shape.shader.material.needsUpdate = true;
+        });
+        this.material.shader.add(this.params, 'shaderBumpScaleX', -1.0, 1.0).name("bump scale X").onChange(function(value) {
+            if(params.shaderNormalMap){
+                var bumpScaleY = meshShader.material.uniforms.normalScale.value.y;
+                meshShader.material.uniforms.normalScale.value.set(value,bumpScaleY);
+            } else {
+                shape.shader.material.uniforms.bumpScale.value = value;
+                shape.shader.material.uniforms.bumpMap.needsUpdate = true;
+            }
+            shape.shader.material.needsUpdate = true;
+        });
+        this.material.shader.add(this.params, 'shaderBumpScaleY', -1.0, 1.0).name("bump scale Y").onChange(function(value) {
+            if(!!params.shaderNormalMap){
+                var bumpScaleX = meshShader.material.uniforms.normalScale.value.x;
+                meshShader.material.uniforms.normalScale.value.set(bumpScaleX, value);
+                meshShader.material.uniforms.normalMap.needsUpdate = true;
+            } else {
+                shape.shader.material.uniforms.bumpScale.value = value;
+                shape.shader.material.uniforms.bumpMap.needsUpdate = true;
+            }
+            meshShader.material.needsUpdate = true;
+        });
+
         this.material.PBR = this.material.addFolder('PBR');
         this.material.PBR.add(this.params, 'roughness', 0, 1.0).onChange(function(value) {
             meshStandard.material.roughness = value;
@@ -188,23 +224,28 @@ class GUI {
         });
         this.material.add(this.params, 'ao', 0, 1.0).name("AO").onChange(function(value) {
             meshPhong.material.aoMapIntensity = value;
+            meshShader.material.uniforms.aoMapIntensity.value = value;
             meshStandard.material.aoMapIntensity = value;
 
             meshPhong.material.needsUpdate = true;
+            meshShader.material.uniformsNeedsUpdate = true;
             meshStandard.material.needsUpdate = true;
         });
 
         //textures
         this.textures = this.gui.addFolder('Textures');
-        this.textures.add(this.params, 'texture', [ 'wood1', 'wood2','wood3', 'cobble1','cobble2',
+        this.textures.add(this.params, 'texture', [ 'wood1', 'wood2','wood3','wood4', 'cobble1','cobble2',
             'cobble3','roof1', 'roof2','roof3', 'bricks1','bricks2', 'bricks3', 'iceTexture'] ).onChange(function(value) {
             shape.phong.material.applyMaps(value);
+            shape.shader.material.applyMaps(value);
             shape.standard.material.applyMaps(value);
 
             shape.phong.material.applyRepeat(params.repeatU, params.repeatV);
+            shape.shader.material.applyRepeat(params.repeatU, params.repeatV);
             shape.standard.material.applyRepeat(params.repeatU, params.repeatV);
 
             shape.phong.needsUpdate = true;
+            shape.shader.needsUpdate = true;
             shape.standard.needsUpdate = true;
         });
         this.textures.add(this.params, 'texOriginX',0, 360).name("origin X").onChange(function(value) {
@@ -231,18 +272,27 @@ class GUI {
         this.textures.add(this.params, 'repeatU',1, 50).name("repeat U").onChange(function(value) {
             var repeatV = shape.phong.material.map.repeat.y;
             shape.phong.material.applyRepeat(value, repeatV);
+            shape.shader.material.applyRepeat(value, repeatV);
             shape.standard.material.applyRepeat(value, repeatV);
 
-            meshPhong.material.needsUpdate = true;
-            meshStandard.material.needsUpdate = true;
+            shape.phong.material.needsUpdate = true;
+            shape.shader.material.uniformsNeedsUpdate = true;
+            shape.shader.material.needsUpdate = true;
+            shape.standard.material.needsUpdate = true;
+
+
+
         });
         this.textures.add(this.params, 'repeatV',1, 50).name("repeat V").onChange(function(value) {
             var repeatU = shape.phong.material.map.repeat.x;
             shape.phong.material.applyRepeat(repeatU, value);
+            shape.shader.material.applyRepeat(repeatU, value);
             shape.standard.material.applyRepeat(repeatU, value);
 
-            meshPhong.material.needsUpdate = true;
-            meshStandard.material.needsUpdate = true;
+            shape.phong.material.needsUpdate = true;
+            shape.shader.material.uniformsNeedsUpdate = true;
+            shape.shader.material.needsUpdate = true;
+            shape.standard.material.needsUpdate = true;
         });
 
         //camera

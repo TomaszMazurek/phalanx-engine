@@ -4,6 +4,7 @@ class Textures {
             wood1: ["textures/wood/wood1/", 0xFFEEB0, undefined, undefined, undefined, undefined, undefined, undefined],
             wood2: ["textures/wood/wood2/", 0xa0522d, undefined, undefined, undefined, undefined, undefined, undefined],
             wood3: ["textures/wood/wood3/", 0xCD8500, undefined, undefined, undefined, undefined, undefined, undefined],
+            wood4: ["textures/wood/wood4/", 0xCD8500, undefined, undefined, undefined, undefined, undefined, undefined],
             cobble1: ["textures/cobblestone/cobble1/", 0x92806d, undefined, undefined, undefined, undefined, undefined, undefined],
             cobble2: ["textures/cobblestone/cobble2/", 0x878481, undefined, undefined, undefined, undefined, undefined, undefined],
             cobble3: ["textures/cobblestone/cobble3/", 0x95908c, undefined, undefined, undefined, undefined, undefined, undefined],

@@ -9,37 +9,70 @@ class Shape {
     getGeometry() {
         switch (selectedShape) {
             case "Box" :
-                return new THREE.BoxGeometry(170,170,170);
-                break;
-            case "Circle":
-                return new THREE.CircleGeometry( 170, 32 );
-                break;
-            case 'Cone':
-                return new THREE.ConeGeometry( 150, 200, 32 );
-                break;
-            case 'Cylinder':
-                return new THREE.CylinderGeometry( 100, 100, 200, 32 );
-                break;
-            case 'Dodecahedron':
-                return new THREE.DodecahedronGeometry( 150 );
-                break;
-            case 'Icosahedron':
-                return new THREE.IcosahedronGeometry( 150 );
-                break;
-            case 'Octahedron':
-                return new THREE.OctahedronGeometry( 150 );
+                var geometry = new THREE.BoxBufferGeometry(170,170,170);
+                var uvs = new Float32Array(geometry.attributes.uv.array);
+                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
+                return geometry;
                 break;
             case 'Sphere':
-                return new THREE.SphereGeometry( 120, 32, 32 );
+                var geometry = new THREE.SphereBufferGeometry( 120, 32, 32 );
+                var uvs = new Float32Array(geometry.attributes.uv.array);
+                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
+                return geometry;
+                break;
+            case "Circle":
+                var geometry = new THREE.CircleBufferGeometry( 170, 32 );
+                var uvs = new Float32Array(geometry.attributes.uv.array);
+                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
+                return geometry;
+                break;
+            case 'Cone':
+                var geometry = new THREE.ConeBufferGeometry( 150, 200, 32 );
+                var uvs = new Float32Array(geometry.attributes.uv.array);
+                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
+                return geometry;
+                break;
+            case 'Cylinder':
+                var geometry = new THREE.CylinderBufferGeometry( 100, 100, 200, 32 );
+                var uvs = new Float32Array(geometry.attributes.uv.array);
+                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
+                return geometry;
+                break;
+            case 'Dodecahedron':
+                var geometry = new THREE.DodecahedronBufferGeometry( 150 );
+                var uvs = new Float32Array(geometry.attributes.uv.array);
+                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
+                return geometry;
+                break;
+            case 'Icosahedron':
+                var geometry = new THREE.IcosahedronBufferGeometry( 150 );
+                var uvs = new Float32Array(geometry.attributes.uv.array);
+                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
+                return geometry;
+                break;
+            case 'Octahedron':
+                var geometry = new THREE.OctahedronBufferGeometry( 150 );
+                var uvs = new Float32Array(geometry.attributes.uv.array);
+                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
+                return geometry;
                 break;
             case 'Tetrahedron':
-                return new THREE.TetrahedronGeometry( 150 );
+                var geometry = new THREE.TetrahedronBufferGeometry( 150 );
+                var uvs = new Float32Array(geometry.attributes.uv.array);
+                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
+                return geometry;
                 break;
             case 'Torus':
-                return new THREE.TorusGeometry( 100, 40, 16, 100 );
+                var geometry = new THREE.TorusBufferGeometry( 100, 40, 16, 100 );
+                var uvs = new Float32Array(geometry.attributes.uv.array);
+                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
+                return geometry;
                 break;
             case 'TorusKnot':
-                return new THREE.TorusKnotGeometry( 100, 40, 16, 100 );
+                var geometry = new THREE.TorusKnotBufferGeometry( 100, 40, 16, 100 );
+                var uvs = new Float32Array(geometry.attributes.uv.array);
+                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
+                return geometry;
                 break;
         }
     }
@@ -54,14 +87,14 @@ class Shape {
         scene.add( meshPhong );
         this.phong = meshPhong;
 
-        shaderMaterial = new Shader();
-        var shaderGeometry = new THREE.BufferGeometry();
-        meshShader = new THREE.Mesh( shaderGeometry.fromGeometry(this.getGeometry()), shaderMaterial );
+        shaderMaterial = new Shader(params.shaderNormalMap);
+        meshShader = new THREE.Mesh( this.getGeometry(), shaderMaterial );
         meshShader.position.set(0,50,0);
         meshShader.castShadow = true;
         meshShader.receiveShadow = false;
         meshShader.material.needsUpdate = true;
         this.shader = meshShader;
+        this.shader.material.defaultAttributeValues.uv = new Float32Array(this.shader.geometry.attributes.uv.array);
         this.shader.material.uniforms.map.needsUpdate = true;
         this.shader.material.needsUpdate = true;
         scene.add( meshShader );
@@ -83,6 +116,13 @@ class Shape {
         this.phong.geometry.needsUpdate = true;
         shape.phong.material.applyRepeat(params.repeatU, params.repeatV);
         this.phong.material.needsUpdate = true;
+
+        this.shader.geometry.dispose();
+        this.shader.geometry = this.getGeometry();
+        this.shader.geometry.needsUpdate = true;
+        this.shader.material.defaultAttributeValues.uv = new Float32Array(this.shader.geometry.attributes.uv.array);
+        shape.shader.material.applyRepeat(params.repeatU, params.repeatV);
+        this.shader.material.needsUpdate = true;
 
         this.standard.geometry.dispose();
         this.standard.geometry = this.getGeometry();

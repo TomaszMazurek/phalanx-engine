@@ -7,8 +7,8 @@ class Phong extends THREE.MeshPhongMaterial{
             normalMap : textureMap['wood1'][4].clone(),
             aoMap : textureMap['wood1'][6].clone(),
             specularMap : textureMap['wood1'][2].clone(),
-            specular : new THREE.Color(textureMap['wood1'][1]),
             bumpScale : 1,
+            normalScale : new THREE.Vector2(1,1),
             shininess : 128,
             side : THREE.DoubleSide
         });
@@ -29,11 +29,10 @@ class Phong extends THREE.MeshPhongMaterial{
 
     applyMaps(mapName){
         this.color = new THREE.Color(textureMap[mapName][1]);
-        this.specular = new THREE.Color(textureMap['wood1'][1]);
 
         this.map = textureMap[mapName][2].clone();
         this.aoMap = textureMap[mapName][6].clone();
-        this.specularMap = textureMap[mapName][6].clone();
+        this.specularMap = textureMap[mapName][2].clone();
 
         this.map.needsUpdate = true;
         this.aoMap.needsUpdate = true;
@@ -54,9 +53,28 @@ class Phong extends THREE.MeshPhongMaterial{
         this.bumpMap.repeat.set(valueX, valueY);
         if(params.phongNormalMap) {
             this.normalMap.repeat.set(valueX, valueY);
+            this.normalMap.needsUpdate = true;
         }
         this.aoMap.repeat.set(valueX, valueY);
         this.specularMap.repeat.set(valueX, valueY);
+
+        var i2,u,v;
+        for (var i = 0; i < shape.phong.geometry.attributes.uv.array.length/2; i++) {
+            i2 = i*2;
+            u = shape.phong.geometry.attributes.uv.array[i2]*this.aoMap.repeat.x;
+            v = shape.phong.geometry.attributes.uv.array[i2+1]*this.aoMap.repeat.y;
+            shape.phong.geometry.attributes.uv2.array[i2] = u;
+            shape.phong.geometry.attributes.uv2.array[i2+1] = v;
+        }
+        shape.phong.geometry.attributes.uv2.needsUpdate = true;
+        shape.phong.material.aoMap.needsUpdate = true;
+
+        this.map.needsUpdate = true;
+        this.bumpMap.needsUpdate = true;
+        this.aoMap.needsUpdate = true;
+        this.specularMap.needsUpdate = true;
+
+        this.needsUpdate = true;
     }
 
     setTexturesRotation(angle = 0){

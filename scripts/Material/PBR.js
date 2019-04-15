@@ -10,6 +10,7 @@ class PBR extends THREE.MeshStandardMaterial{
             roughness : 0.8,
             metalness : 0,
             bumpScale : 1,
+            normalScale : new THREE.Vector2(1,1),
             side : THREE.DoubleSide
       });
 
@@ -55,6 +56,26 @@ class PBR extends THREE.MeshStandardMaterial{
         if(params.normalMap) {
             this.normalMap.repeat.set(valueX, valueY);
         }
+        this.aoMap.repeat.set(valueX, valueY);
+        this.roughnessMap.repeat.set(valueX, valueY);
+
+        var i2,u,v;
+        for (var i = 0; i < shape.standard.geometry.attributes.uv.array.length/2; i++) {
+            i2 = i*2;
+            u = shape.standard.geometry.attributes.uv.array[i2]*this.aoMap.repeat.x;
+            v = shape.standard.geometry.attributes.uv.array[i2+1]*this.aoMap.repeat.y;
+            shape.standard.geometry.attributes.uv2.array[i2] = u;
+            shape.standard.geometry.attributes.uv2.array[i2+1] = v;
+        }
+        shape.standard.geometry.attributes.uv2.needsUpdate = true;
+        shape.standard.material.aoMap.needsUpdate = true;
+
+        this.map.needsUpdate = true;
+        this.bumpMap.needsUpdate = true;
+        this.aoMap.needsUpdate = true;
+        this.roughnessMap.needsUpdate = true;
+
+        this.needsUpdate = true;
     }
 
     setTexturesRotation(angle = 0){
