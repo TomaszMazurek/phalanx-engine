@@ -1,7 +1,25 @@
 class Shader extends THREE.ShaderMaterial{
     constructor(){
         super({
-            uniforms: THREE.UniformsUtils.clone(THREE.ShaderLib.phong.uniforms),
+            uniforms: THREE.UniformsUtils.merge( [
+                THREE.UniformsLib.common,
+                THREE.UniformsLib.specularmap,
+                THREE.UniformsLib.envmap,
+                THREE.UniformsLib.aomap,
+                THREE.UniformsLib.lightmap,
+                THREE.UniformsLib.emissivemap,
+                THREE.UniformsLib.bumpmap,
+                THREE.UniformsLib.normalmap,
+                //THREE.UniformsLib.displacementmap,
+                THREE.UniformsLib.gradientmap,
+                //THREE.UniformsLib.fog,
+                THREE.UniformsLib.lights,
+                {
+                    emissive: { value: new THREE.Color( 0x000000 ) },
+                    specular: { value: new THREE.Color( 0x111111 ) },
+                    shininess: { value: 30 }
+                }
+            ] ),
             vertexShader: THREE.ShaderLib.phong.vertexShader,
             fragmentShader: THREE.ShaderLib.phong.fragmentShader,
             lights:true,
