@@ -1,16 +1,15 @@
-varying float distToCamera;
 varying vec3 vBary;
 varying vec3 vState;
 varying float vSel;
 varying float vTex;
-varying float vTexType;
 varying float vOp;
 
 varying vec2 vN;
 varying vec2 vUv;
 
-varying float nDotVP;
 varying vec3 vColor;
+
+varying float nDotVP;
 
 uniform sampler2D tvTextures[16];
 uniform sampler2D tMatCap;
@@ -47,7 +46,7 @@ float luminance(float r, float g, float b) {
     return float (colorArray[0] * 0.2126 + colorArray[1] * 0.7152 + colorArray[2] * 0.0722);
 }
 
-float contrast(in vec3 rgb1, in vec3 rgb2) {
+float contrast(in vec3    rgb1, in vec3 rgb2) {
     float lum1 = luminance(rgb1.x, rgb1.y, rgb1.z) + 0.05;
     float lum2 = luminance(rgb2.x, rgb2.y, rgb2.z) + 0.05;
     if (lum1>lum2){
@@ -67,7 +66,7 @@ vec4 diffuse(highp int textureType) {
 
 vec3 edgeFactorTri(float thickness) {
     vec3 d = fwidth(vBary.xyz);
-    float edgeThickness = thickness-distToCamera/700.;
+    float edgeThickness = thickness - gl_FragCoord.z * 1.2;
     edgeThickness = edgeThickness < 0.4 ? 0.4 : edgeThickness;
     return smoothstep(vec3(0.0), d * edgeThickness, vBary.xyz);
 }
@@ -79,8 +78,8 @@ void main() {
     vec3 selectionLight;
     vec3 selectedColor = vec3(0.96, 0.82, 0.2);
     float stdThickness = 2.;
-    float selectionThickness = 4.;
-    float triangleThickness = .7;
+    float selectionThickness = 5.;
+    float triangleThickness = .9;
     vec3 base;
 
     if (contrast(cColor.rgb, selectionColor3) > 1.5) {
@@ -126,15 +125,16 @@ void main() {
                 } else if (vState.x == 4. || vState.x == 3.) {
                     edgefactor = edgeFactorTri(selectionThickness);
                 }
+
                 gl_FragColor.rgb = mix(
-                vState.x == 4. ? uniqueColor : (vState.x == 3. ? selectedColor : (vState.x == 2. ? triangleEdgeColor : edgeColor)),
-                base.xyz,
-                (vState.x == 0.) ? 1. : edgefactor.x);
+                    vState.x == 4. ? uniqueColor : (vState.x == 3. ? selectedColor : (vState.x == 2. ? triangleEdgeColor : edgeColor)),
+                    base.xyz,
+                    (vState.x == 0.) ? 1. : edgefactor.x);
 
                 if (objectMode) gl_FragColor.a = vState.x == 0. ? 0. : (1.-edgefactor.x) * .8;
             }
         } else if (edgefactor.y <= edgefactor.z) {
-            if (wireframe == 0 && (vState.y == 1. || vState.y == 2.)){
+            if (wireframe == 0 && (vState.y == 1. || vState.y == 2.)) {
                 gl_FragColor.rgb = base.xyz;
             } else {
                 if (vState.y == 2.) {
@@ -142,8 +142,12 @@ void main() {
                 } else if (vState.y == 4. || vState.y == 3.) {
                     edgefactor = edgeFactorTri(selectionThickness);
                 }
-                gl_FragColor.rgb = mix(vState.y == 4. ? uniqueColor :
-                (vState.y == 3. ? selectedColor : (vState.y == 2. ? triangleEdgeColor : edgeColor)), base.xyz, (vState.y == 0.) ? 1. : edgefactor.y);
+
+                gl_FragColor.rgb = mix(
+                    vState.y == 4. ? uniqueColor : (vState.y == 3. ? selectedColor : (vState.y == 2. ? triangleEdgeColor : edgeColor)),
+                    base.xyz,
+                    (vState.y == 0.) ? 1. : edgefactor.y);
+
                 if (objectMode) gl_FragColor.a = vState.y == 0. ? 0. : (1.-edgefactor.y) * .8;
             }
         } else {
@@ -155,9 +159,15 @@ void main() {
                 } else if (vState.z == 4. || vState.z == 3.) {
                     edgefactor = edgeFactorTri(selectionThickness);
                 }
-                gl_FragColor.rgb = mix(vState.z == 4. ? uniqueColor : (vState.z == 3. ? selectedColor : (vState.z == 2. ? triangleEdgeColor : edgeColor)), base.xyz, (vState.z == 0.) ? 1. : edgefactor.z);
+
+                gl_FragColor.rgb = mix(
+                    vState.z == 4. ? uniqueColor : (vState.z == 3. ? selectedColor : (vState.z == 2. ? triangleEdgeColor : edgeColor)),
+                    base.xyz,
+                    (vState.z == 0.) ? 1. : edgefactor.z);
+
                 if (objectMode) gl_FragColor.a = vState.z == 0. ? 0. : (1.-edgefactor.z) * .8;
-            } }
+            }
+        }
     } else {
         gl_FragColor.rgb = base.xyz;
     }
