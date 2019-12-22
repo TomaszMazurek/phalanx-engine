@@ -1,32 +1,29 @@
-class Phong extends THREE.MeshPhongMaterial{
+class Phong extends Shader {
     constructor(){
-        super({
-            color : new THREE.Color(textureMap['wood1'][1]),
-            map : textureMap['wood1'][2].clone(),
-            bumpMap : textureMap['wood1'][3].clone(),
-            normalMap : textureMap['wood1'][4].clone(),
-            aoMap : textureMap['wood1'][6].clone(),
-            specularMap : textureMap['wood1'][2].clone(),
-            bumpScale : 1,
-            normalScale : new THREE.Vector2(1,1),
-            shininess : 128,
-            side : THREE.DoubleSide
-        });
+        super();
+        this.phong = true;
+        this.uniforms = THREE.UniformsUtils.merge( [
+            THREE.ShaderLib.phong.uniforms,
+            {
+                emissive: { value: new THREE.Color( 0x000000 ) },
+                specular: { value: new THREE.Color( 0x111111 ) },
+                shininess: { value: 30 }
+            }]);
+        this.vertexShader = THREE.ShaderLib.phong.vertexShader;
+        this.fragmentShader = THREE.ShaderLib.phong.fragmentShader;
 
-        this.map.repeat.set(1, 1);
-        this.bumpMap.repeat.set(1, 1);
-        this.normalMap.repeat.set(1, 1);
-        this.aoMap.repeat.set(1, 1);
-        this.specularMap.repeat.set(1, 1);
-
-        this.map.needsUpdate = true;
-        this.bumpMap.needsUpdate = true;
-        this.normalMap.needsUpdate = true;
-        this.aoMap.needsUpdate = true;
+        var newSpecularMap = textureMap[guiInstance.params.texture][2].clone();
+        this.uniforms.specularMap.value = newSpecularMap;
+        this.specularMap = newSpecularMap;
+        this.uniforms.specular.needsUpdate = true;
         this.specularMap.needsUpdate = true;
+
+        this.uniforms.shininess.value = 128;
+        this.uniforms.shininess.needsUpdate = true;
+
     }
 
-
+/*
     applyMaps(mapName){
         this.color = new THREE.Color(textureMap[mapName][1]);
 
@@ -38,7 +35,7 @@ class Phong extends THREE.MeshPhongMaterial{
         this.aoMap.needsUpdate = true;
         this.specularMap.needsUpdate = true;
 
-        if(params.phongNormalMap){
+        if(sceneInstance.params.phongNormalMap){
             this.normalMap = textureMap[mapName][4].clone();
             this.normalMap.needsUpdate = true;
         } else {
@@ -51,7 +48,7 @@ class Phong extends THREE.MeshPhongMaterial{
     applyRepeat(valueX, valueY){
         this.map.repeat.set(valueX, valueY);
         this.bumpMap.repeat.set(valueX, valueY);
-        if(params.phongNormalMap) {
+        if(guiInstance.params.phongNormalMap) {
             this.normalMap.repeat.set(valueX, valueY);
             this.normalMap.needsUpdate = true;
         }
@@ -80,7 +77,7 @@ class Phong extends THREE.MeshPhongMaterial{
     setTexturesRotation(angle = 0){
         var rotation = (angle * (Math.PI/180));
         this.map.rotation = rotation;
-        if(params.phongNormalMap) {
+        if(guiInstance.params.phongNormalMap) {
             this.normalMap.rotation = rotation;
         } else {
             this.bumpMap.rotation = rotation;
@@ -92,7 +89,7 @@ class Phong extends THREE.MeshPhongMaterial{
         var center = new THREE.Vector2(centerX, centerY);
 
         this.map.center = center;
-        if(params.phongNormalMap) {
+        if(guiInstance.params.phongNormalMap) {
             this.normalMap.center.set(center);
             this.normalMap.needsUpdate = true;
         } else {
@@ -105,6 +102,6 @@ class Phong extends THREE.MeshPhongMaterial{
         this.map.needsUpdate = true;
         this.aoMap.needsUpdate = true;
         this.specularMap.needsUpdate = true;
-    }
+    }*/
 
 }

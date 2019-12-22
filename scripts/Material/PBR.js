@@ -1,40 +1,30 @@
-class PBR extends THREE.MeshStandardMaterial{
+class PBR extends Shader {
     constructor(texture){
-        super({
-            color : new THREE.Color(textureMap['wood1'][1]),
-            map : textureMap['wood1'][2].clone(),
-            bumpMap : textureMap['wood1'][3].clone(),
-            normalMap : textureMap['wood1'][4].clone(),
-            roughnessMap : textureMap['wood1'][5].clone(),
-            aoMap : textureMap['wood1'][6].clone(),
-            roughness : 0.8,
-            metalness : 0,
-            bumpScale : 1,
-            normalScale : new THREE.Vector2(1,1),
-            side : THREE.DoubleSide
-      });
+        super();
+        this.pbr = true;
+        this.uniforms = THREE.UniformsUtils.merge( [
+                THREE.ShaderLib.standard.uniforms,
+                {
+                    emissive: { value: new THREE.Color( 0x000000 ) },
+                    roughness: { value: 0.8 },
+                    metalness : { value: 0 },
+                }
+            ] );
+        this.vertexShader = THREE.ShaderLib.standard.vertexShader;
+        this.fragmentShader = THREE.ShaderLib.standard.fragmentShader;
 
-        this.map.repeat.set(1, 1);
-        this.bumpMap.repeat.set(1, 1);
-        this.normalMap.repeat.set(1, 1);
-        this.roughnessMap.repeat.set(1, 1);
-        this.aoMap.repeat.set(1, 1);
-
-        this.map.needsUpdate = true;
-        this.bumpMap.needsUpdate = true;
-        this.roughnessMap.needsUpdate = true;
-        this.normalMap.needsUpdate = true;
-        this.aoMap.needsUpdate = true;
+        this.uniforms.roughness.needsUpdate = true;
+        this.uniforms.metalness.needsUpdate = true;
 
     }
-
+/*
     applyMaps(mapName){
         this.color = new THREE.Color(textureMap[mapName][1]);
 
         this.map = textureMap[mapName][2].clone();
         this.map.needsUpdate = true;
 
-        if(params.stdNormalMap){
+        if(guiInstance.params.stdNormalMap){
             this.normalMap = textureMap[mapName][4].clone();
             this.normalMap.needsUpdate = true;
         } else {
@@ -81,7 +71,7 @@ class PBR extends THREE.MeshStandardMaterial{
     setTexturesRotation(angle = 0){
         var rotation = (angle * (Math.PI/180));
         this.map.rotation = rotation;
-        if(params.stdNormalMap) {
+        if(guiInstance.params.stdNormalMap) {
             this.normalMap.rotation = rotation;
         } else {
             this.bumpMap.rotation = rotation;
@@ -92,7 +82,7 @@ class PBR extends THREE.MeshStandardMaterial{
     setTexturesCenter(centerX, centerY){
         var center = new THREE.Vector2(centerX, centerY);
         this.map.center = center;
-        if(params.phongNormalMap) {
+        if(guiInstance.params.phongNormalMap) {
             this.normalMap.center.set(center);
             this.normalMap.needsUpdate = true;
         } else {
@@ -105,5 +95,5 @@ class PBR extends THREE.MeshStandardMaterial{
         this.map.needsUpdate = true;
         this.aoMap.needsUpdate = true;
         this.roughnessMap.needsUpdate = true;
-    }
+    }*/
 }

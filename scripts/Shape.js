@@ -1,134 +1,75 @@
 class Shape {
-    constructor(){
-        this.phong = null;
-        this.standard = null;
-        this.shader = null;
+    constructor(sceneInstance){
+        this.scene = sceneInstance.scene;
         this.create();
     }
 
-    getGeometry() {
-        switch (selectedShape) {
-            case "Box" :
-                var geometry = new THREE.BoxBufferGeometry(170,170,170);
-                var uvs = new Float32Array(geometry.attributes.uv.array);
-                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
-                return geometry;
-                break;
-            case 'Sphere':
-                var geometry = new THREE.SphereBufferGeometry( 120, 32, 32 );
-                var uvs = new Float32Array(geometry.attributes.uv.array);
-                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
-                return geometry;
-                break;
-            case "Circle":
-                var geometry = new THREE.CircleBufferGeometry( 170, 32 );
-                var uvs = new Float32Array(geometry.attributes.uv.array);
-                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
-                return geometry;
-                break;
-            case 'Cone':
-                var geometry = new THREE.ConeBufferGeometry( 150, 200, 32 );
-                var uvs = new Float32Array(geometry.attributes.uv.array);
-                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
-                return geometry;
-                break;
-            case 'Cylinder':
-                var geometry = new THREE.CylinderBufferGeometry( 100, 100, 200, 32 );
-                var uvs = new Float32Array(geometry.attributes.uv.array);
-                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
-                return geometry;
-                break;
-            case 'Dodecahedron':
-                var geometry = new THREE.DodecahedronBufferGeometry( 150 );
-                var uvs = new Float32Array(geometry.attributes.uv.array);
-                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
-                return geometry;
-                break;
-            case 'Icosahedron':
-                var geometry = new THREE.IcosahedronBufferGeometry( 150 );
-                var uvs = new Float32Array(geometry.attributes.uv.array);
-                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
-                return geometry;
-                break;
-            case 'Octahedron':
-                var geometry = new THREE.OctahedronBufferGeometry( 150 );
-                var uvs = new Float32Array(geometry.attributes.uv.array);
-                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
-                return geometry;
-                break;
-            case 'Tetrahedron':
-                var geometry = new THREE.TetrahedronBufferGeometry( 150 );
-                var uvs = new Float32Array(geometry.attributes.uv.array);
-                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
-                return geometry;
-                break;
-            case 'Torus':
-                var geometry = new THREE.TorusBufferGeometry( 100, 40, 16, 100 );
-                var uvs = new Float32Array(geometry.attributes.uv.array);
-                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
-                return geometry;
-                break;
-            case 'TorusKnot':
-                var geometry = new THREE.TorusKnotBufferGeometry( 100, 40, 16, 100 );
-                var uvs = new Float32Array(geometry.attributes.uv.array);
-                geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
-                return geometry;
-                break;
-        }
+    static getShapes() {
+        return [ 'Box',  'Sphere', 'Cone', 'Cylinder', 'Torus', 'TorusKnot', 'Dodecahedron', 'Icosahedron', 'Octahedron','Tetrahedron', 'Circle'];
     }
+    static getParameters(shape){
+        var parameters = {
+            Box: [ 170, 170, 170 ],
+            Sphere: [ 120, 32, 32 ],
+            Circle: [ 170, 32 ],
+            Cone: [150, 200, 32 ],
+            Cylinder: [ 100, 100, 200, 32 ],
+            Dodecahedron: [ 150 ],
+            Icosahedron: [ 150 ],
+            Octahedron: [ 150 ],
+            Tetrahedron: [ 150 ],
+            Torus: [ 100, 40, 16, 100 ],
+            TorusKnot: [ 100, 40, 16, 100 ]
+        };
+        return parameters[shape];
+    }
+    getGeometry(shapeName) {
 
+        var parameters = Shape.getParameters(shapeName);
+        var evalExpression =  "new THREE." + shapeName + "BufferGeometry(parameters[0], parameters[1], parameters[2], parameters[[3]]);";
+        var geometry = eval(evalExpression);
+        var uvs = new Float32Array(geometry.attributes.uv.array);
+        geometry.addAttribute( 'uv2', new THREE.BufferAttribute( uvs, 2 ) );
+        return geometry;
+    }
     create(){
-        phongMaterial = new Phong();
-
-        meshPhong = new THREE.Mesh( this.getGeometry(), phongMaterial );
-        meshPhong.position.set(300,50,0);
+        phongMaterial = new Material(Material.SHADER.PHONG);
+        meshPhong = new THREE.Mesh( this.getGeometry(guiInstance.params.shape), phongMaterial );
+        meshPhong.name = "meshObject";
+        meshPhong.position.set(200,50,0);
         meshPhong.castShadow = true;
         meshPhong.receiveShadow = false;
-        scene.add( meshPhong );
-        this.phong = meshPhong;
+        meshPhong.material.defaultAttributeValues.uv = new Float32Array(meshPhong.geometry.attributes.uv.array);
+        this.scene.add( meshPhong );
 
-        shaderMaterial = new Shader(params.shaderNormalMap);
-        meshShader = new THREE.Mesh( this.getGeometry(), shaderMaterial );
-        meshShader.position.set(0,50,0);
-        meshShader.castShadow = true;
-        meshShader.receiveShadow = false;
-        meshShader.material.needsUpdate = true;
-        this.shader = meshShader;
-        this.shader.material.defaultAttributeValues.uv = new Float32Array(this.shader.geometry.attributes.uv.array);
-        this.shader.material.uniforms.map.needsUpdate = true;
-        this.shader.material.needsUpdate = true;
-        scene.add( meshShader );
-
-
-        stdMaterial = new PBR();
-        meshStandard = new THREE.Mesh( this.getGeometry(), stdMaterial );
-        meshStandard.position.set(-300,50,0);
+        stdMaterial = new Material(Material.SHADER.PBR);
+        meshStandard = new THREE.Mesh( this.getGeometry(guiInstance.params.shape), stdMaterial );
+        meshStandard.name = "meshObject";
+        meshStandard.position.set(-200,50,0);
         meshStandard.castShadow = true;
         meshStandard.receiveShadow = false;
-        scene.add( meshStandard );
-
-        this.standard = meshStandard;
+        meshStandard.material.defaultAttributeValues.uv = new Float32Array(meshStandard.geometry.attributes.uv.array);
+        this.scene.add( meshStandard );
     }
-
-    changeShape(){
-        this.phong.geometry.dispose();
-        this.phong.geometry = this.getGeometry();
-        this.phong.geometry.needsUpdate = true;
-        shape.phong.material.applyRepeat(params.repeatU, params.repeatV);
-        this.phong.material.needsUpdate = true;
-
-        this.shader.geometry.dispose();
-        this.shader.geometry = this.getGeometry();
-        this.shader.geometry.needsUpdate = true;
-        this.shader.material.defaultAttributeValues.uv = new Float32Array(this.shader.geometry.attributes.uv.array);
-        shape.shader.material.applyRepeat(params.repeatU, params.repeatV);
-        this.shader.material.needsUpdate = true;
-
-        this.standard.geometry.dispose();
-        this.standard.geometry = this.getGeometry();
-        this.standard.geometry.needsUpdate = true;
-        shape.standard.material.applyRepeat(params.repeatU, params.repeatV);
-        this.standard.material.needsUpdate = true;
+    changeShape(shapeName){
+        for (var j = 0; j < sceneInstance.scene.children.length; j++) {
+            var child = sceneInstance.scene.children[j];
+            if (child.name === "meshObject") {
+                child.geometry.dispose();
+                child.geometry = this.getGeometry(shapeName);
+                child.geometry.needsUpdate = true;
+                child.material.applyRepeat(guiInstance.params.repeatU, guiInstance.params.repeatV);
+                child.material.needsUpdate = true;
+            }
+        }
     }
-
+    update(){
+        for (var j = 0; j < sceneInstance.scene.children.length; j++) {
+            var child = sceneInstance.scene.children[j];
+            if (child.name === "meshObject") {
+                child.needsUpdate = true;
+                child.needsUpdate = true;
+            }
+        }
+    }
 }

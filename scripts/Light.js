@@ -1,5 +1,5 @@
 class Light {
-    constructor() {
+    constructor(scene) {
         this.hemisphereLight = null;
         this.ambientLight = null;
         this.directionalLight =  null;
@@ -8,6 +8,7 @@ class Light {
         this.near = 500;
         this.far = 25000;
         this.fov = 30;
+        this.scene = scene;
 
         this.createAmbientLight();
         this.createHemisphereLight();
@@ -17,43 +18,43 @@ class Light {
     }
 
     createAmbientLight(_color){
-            var color = _color ? _color :  0x404040;
-            this.ambientLight = new THREE.AmbientLight( color );
-        scene.add(this.ambientLight);
+        var color = _color ? _color :  0x404040;
+        this.ambientLight = new THREE.AmbientLight( color );
+        this.scene.add(this.ambientLight);
     }
 
     createHemisphereLight (_color){
-            var color = _color ? _color :  0xffffff;
-            this.hemisphereLight = new THREE.HemisphereLight( 0xffffff, 0x080820, 0.5 );
-        scene.add(this.hemisphereLight);
+        var color = _color ? _color :  0xffffff;
+        this.hemisphereLight = new THREE.HemisphereLight( 0xffffff, 0x080820, 0.5 );
+        this.scene.add(this.hemisphereLight);
     }
 
     //color: RGB, position: Vec3
     createDirectionalLight(_color, _position){
-            var color = _color ? _color :  0xffffff;
-            var position = _position ? _position : new THREE.Vector3(0, 1000, 0);
+        var color = _color ? _color :  0xffffff;
+        var position = _position ? _position : new THREE.Vector3(0, 1000, 0);
 
-            this.directionalLight =  new THREE.DirectionalLight(color);
-            this.directionalLight.position.set(position.x, position.y, position.z);
+        this.directionalLight =  new THREE.DirectionalLight(color);
+        this.directionalLight.position.set(position.x, position.y, position.z);
 
-            this.directionalLight.castShadow = true;
+        this.directionalLight.castShadow = true;
 
-            this.directionalLight.shadow.mapSize.width = 1024;
-            this.directionalLight.shadow.mapSize.height = 1024;
+        this.directionalLight.shadow.mapSize.width = 1024;
+        this.directionalLight.shadow.mapSize.height = 1024;
 
-            this.directionalLight.shadow.camera.near = this.near;
-            this.directionalLight.shadow.camera.far = this.far;
-            this.directionalLight.shadow.camera.fov = this.fov;
+        this.directionalLight.shadow.camera.near = this.near;
+        this.directionalLight.shadow.camera.far = this.far;
+        this.directionalLight.shadow.camera.fov = this.fov;
 
-            this.directionalLight.shadow.camera.left = -this.shadowDiameter;
-            this.directionalLight.shadow.camera.right = this.shadowDiameter;
-            this.directionalLight.shadow.camera.top = this.shadowDiameter;
-            this.directionalLight.shadow.camera.bottom = -this.shadowDiameter;
+        this.directionalLight.shadow.camera.left = -this.shadowDiameter;
+        this.directionalLight.shadow.camera.right = this.shadowDiameter;
+        this.directionalLight.shadow.camera.top = this.shadowDiameter;
+        this.directionalLight.shadow.camera.bottom = -this.shadowDiameter;
 
-            this.directionalLight.shadow.bias = 0.001;
-            this.directionalLight.intensity = params.directionalLightPower;
+        this.directionalLight.shadow.bias = 0.001;
+        this.directionalLight.intensity = 0.7;
         this.createBulb(this.directionalLight, 50);
-        scene.add(this.directionalLight);
+        this.scene.add(this.directionalLight);
     }
     //color: RGB, position: Vec3, angle: float
     createPointLight(_color, _position, _angle){
@@ -79,9 +80,9 @@ class Light {
             pointLight.shadow.camera.bottom = -this.shadowDiameter;
 
             pointLight.shadow.bias = 0.001;
-            pointLight.intensity = params.pointLightPower;
+            pointLight.intensity = 0.2;
             this.pointLights.push(pointLight);
-            scene.add(pointLight);
+            this.scene.add(pointLight);
             this.createBulb(pointLight, 10);
     }
 
@@ -92,7 +93,7 @@ class Light {
         var bulb = new THREE.Mesh( bulbGeometry, bulbMaterial );
         bulb.position.set(light.position.x, light.position.y, light.position.z );
         light.bulb = bulb;
-        scene.add(bulb);
+        this.scene.add(bulb);
         return bulb
     }
 }

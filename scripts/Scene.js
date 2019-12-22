@@ -1,27 +1,23 @@
 class Scene{
     constructor(){
-     this.scene = null;
-     this.camera = null;
-     this.renderer = null;
-     this.controls = null;
-     this.create();
+    this.renderer = new THREE.WebGLRenderer();
+    this.renderer.setSize( window.innerWidth, window.innerHeight );
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMapSoft = true;
+
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color( 'skyblue' );
+
+    this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.2, 25000);
+    this.camera.position.z = 1000;
+
+    this.light = new Light(this.scene);
+
+    this.controls = new THREE.OrbitControls( this.camera, document.getElementById("scene-container"));
+    this.createWalls();
     }
 
-     create() {
-        this.renderer = new THREE.WebGLRenderer();
-        this.renderer.setSize( window.innerWidth, window.innerHeight );
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMapSoft = true;
-
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color( 'skyblue' );
-
-        this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.2, 25000);
-        this.camera.position.z = 1000;
-
-        this.controls = new THREE.OrbitControls( this.camera, document.getElementById("scene-container"));
-
-
+    createWalls() {
          //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
          var planeGeometry = new THREE.BoxGeometry(2000, 2000, 10, 100, 100, 5);
          var planeMaterial = new THREE.MeshPhongMaterial( {
@@ -47,7 +43,7 @@ class Scene{
 
 
          //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
-         var leftWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
+/*         var leftWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
          var leftWallMaterial = new THREE.MeshPhongMaterial( {
              color: new THREE.Color(textureMap['bricks1'][1]),
              map        :  textureMap['bricks1'][2].clone(),
@@ -67,10 +63,10 @@ class Scene{
          leftWall.position.x = -1000;
          leftWall.position.y = 350;
          leftWall.receiveShadow = true;
-         this.scene.add( leftWall );
+         this.scene.add( leftWall );*/
 
          //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
-         var backWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
+/*         var backWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
          var backWallMaterial = new THREE.MeshPhongMaterial( {
              color: new THREE.Color(textureMap['bricks2'][1]),
              map : textureMap['bricks2'][2].clone(),
@@ -90,10 +86,10 @@ class Scene{
          backWall.position.z = -1000;
          backWall.position.y = 350;
          backWall.receiveShadow = true;
-         this.scene.add( backWall );
+         this.scene.add( backWall );*/
 
          //BoxGeometry(width : Float, height : Float, depth : Float, widthSegments : Integer, heightSegments : Integer, depthSegments : Integer)
-         var rightWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
+/*         var rightWallGeometry = new THREE.BoxGeometry(2000, 1000, 10, 100, 100, 5);
          var rightWallMaterial = new THREE.MeshPhongMaterial( {
              color: new THREE.Color(textureMap['bricks3'][1]),
              map        :  textureMap['bricks3'][2].clone(),
@@ -114,6 +110,6 @@ class Scene{
          rightWall.position.x = 1000;
          rightWall.position.y = 350;
          rightWall.receiveShadow = true;
-         this.scene.add( rightWall );
+         this.scene.add( rightWall );*/
     };
 }
