@@ -14,12 +14,21 @@ class Textures {
             bricks1: ["textures/bricks/bricks1/", 0xaf7c63, undefined, undefined, undefined, undefined, undefined, undefined],
             bricks2: ["textures/bricks/bricks2/", 0xb4705f, undefined, undefined, undefined, undefined, undefined, undefined],
             bricks3: ["textures/bricks/bricks3/", 0xb18a6f, undefined, undefined, undefined, undefined, undefined, undefined],
-            iceTexture: ["textures/others/iceTexture/", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined, undefined],
+            slime: ["textures/others/slime/", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined, undefined]
         };//baseColor - 2, bumpMap - 3, normalMap - 4, roughnessMap - 5, aoMap - 6, displacement - 7
+        this.skyboxMap = {
+            //skyBox: ["textures/skybox/tears_of_steel_bridge/", undefined]
+            kosakowo: ["textures/skybox/kosakowo/", undefined],
+            quarry: ["textures/skybox/quarry/", undefined],
+            bethnal: ["textures/skybox/bethnal/", undefined],
+            forest: ["textures/skybox/forest/", undefined],
+            lakeside: ["textures/skybox/lakeside/", undefined],
+        }
     }
 
+
     async populate(){
-        var i,
+        var i, texture,
             self = this,
             keyArray = Object.keys(self.textureMap);
 
@@ -50,7 +59,6 @@ class Textures {
             this.textureMap[keyArray[i]][3].repeat.set( 1, 1 );
         }
 
-
         for (i = 0; i < keyArray.length; i++) {
             var key = keyArray[i];
             var texturePromise = new Promise(resolve => {
@@ -64,7 +72,7 @@ class Textures {
             this.textureMap[keyArray[i]][4].repeat.set( 1, 1 );
         }
 
-        for (i = 0; i < keyArray.length; i++) {
+/*        for (i = 0; i < keyArray.length; i++) {
             var key = keyArray[i];
             var texturePromise = new Promise(resolve => {
                 new THREE.TextureLoader().load( self.textureMap[key][0] + "Roughness.jpg", resolve);
@@ -75,7 +83,7 @@ class Textures {
             this.textureMap[keyArray[i]][5].wrapS = THREE.RepeatWrapping;
             this.textureMap[keyArray[i]][5].wrapT = THREE.RepeatWrapping;
             this.textureMap[keyArray[i]][5].repeat.set( 1, 1 );
-        }
+        }*/
 
         for (i = 0; i < keyArray.length; i++) {
             var key = keyArray[i];
@@ -90,7 +98,7 @@ class Textures {
             this.textureMap[keyArray[i]][6].repeat.set( 1, 1 );
         }
 
-        for (i = 0; i < keyArray.length; i++) {
+/*        for (i = 0; i < keyArray.length; i++) {
             var key = keyArray[i];
             var texturePromise = new Promise(resolve => {
                 new THREE.TextureLoader().load( self.textureMap[key][0] + "Displacement.jpg", resolve);
@@ -101,8 +109,30 @@ class Textures {
             this.textureMap[keyArray[i]][7].wrapS = THREE.RepeatWrapping;
             this.textureMap[keyArray[i]][7].wrapT = THREE.RepeatWrapping;
             this.textureMap[keyArray[i]][7].repeat.set( 1, 1 );
+        }*/
+
+        var skyboxKeyArray = Object.keys(self.skyboxMap);
+        for (i = 0; i < skyboxKeyArray.length; i++) {
+            var key = skyboxKeyArray[i];
+            var texturePromise = new Promise(resolve => {
+                var loader = new THREE.CubeTextureLoader();
+                loader.setPath( self.skyboxMap[key][0] );
+                loader.load( [
+                    'px.png', 'nx.png',
+                    'py.png', 'ny.png',
+                    'pz.png', 'nz.png'
+                ], resolve);
+            });
+            texture = await texturePromise;
+            this.skyboxMap[skyboxKeyArray[i]][1] = texture;
         }
 
-        return this.textureMap;
+        return {textureMap: this.textureMap, skyboxMap: this.skyboxMap };
     };
+    getTextureKeys() {
+        return Object.keys(this.textureMap);
+    }
+    getSkyboxKeys() {
+        return Object.keys(this.skyboxMap);
+    }
 }

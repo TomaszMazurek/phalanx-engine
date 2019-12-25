@@ -12,7 +12,7 @@ class Phong extends Shader {
         this.vertexShader = THREE.ShaderLib.phong.vertexShader;
         this.fragmentShader = THREE.ShaderLib.phong.fragmentShader;
 
-        var newSpecularMap = textureMap[guiInstance.params.texture][2].clone();
+        var newSpecularMap = app.textureMap[app.gui.params.texture][2].clone();
         this.uniforms.specularMap.value = newSpecularMap;
         this.specularMap = newSpecularMap;
         this.uniforms.specular.needsUpdate = true;

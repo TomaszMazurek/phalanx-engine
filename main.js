@@ -1,52 +1,66 @@
-var i,
-    objects = [],
-    textures, textureMap, shaderMap,
-    sceneInstance, guiInstance,
-    geometry, material, plane, texture,
-    normalMap, specularMap, roughnessMap,
-    mesh, phongMaterial, shaderMaterial, stdMaterial, normalMaterial,
-    meshPhong,meshShader, meshStandard, meshNormal,
-    selectedShape, shape,
-    near,far, fov;
-
+var app = {
+        gui: null,
+        controls: null,
+        textureMap: null,
+        skyboxMap: null,
+        shaderMap: null,
+        renderer: null,
+        camera: null,
+        scene: null,
+        skyboxScene: null,
+        meshes: null,
+        selectedShape: null
+    };
 
 async function init() {
-    var texturesInstance = new Textures();
-    textureMap = await texturesInstance.populate();
+    app.textures = new Textures();
+    var textures =  await app.textures.populate();
+    app.textureMap = textures.textureMap;
+    app.skyboxMap = textures.skyboxMap;
 
     var shadersInstance = new Shaders();
-    shaderMap = await shadersInstance.populate();
+    app.shaderMap = await shadersInstance.populate();
+//renderer
+    app.renderer = new THREE.WebGLRenderer({alpha: true});
+    app.renderer.outputEncoding = THREE.sRGBEncoding;
+    app.renderer.setSize( window.innerWidth, window.innerHeight );
+    app.renderer.shadowMap.enabled = true;
+    app.renderer.shadowMapSoft = true;
 
-    sceneInstance = new Scene();
-    guiInstance = new GUI(sceneInstance);
+//scene
+    app.scene = new Scene();
+    app.scene.background = app.skyboxMap["bethnal"][1];
+//camera
+    app.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000);
+    app.camera.position.z = 1000;
+//controls
+    app.controls = new THREE.OrbitControls( app.camera, document.getElementById("scene-container"));
+//GUI
+    app.gui = new GUI();
+//meshes
+    app.meshes = Shape.create();
 
-    shape = new Shape(sceneInstance);
-    shape.update();
-
-    document.getElementById("scene-container").appendChild( sceneInstance.renderer.domElement );
-    document.body.appendChild( guiInstance.stats.domElement );
-    document.body.appendChild( guiInstance.gui.domElement );
-    sceneInstance.controls.update();
+    document.getElementById("scene-container").appendChild( app.renderer.domElement );
+    document.body.appendChild( app.gui.stats.domElement );
+    document.body.appendChild( app.gui.gui.domElement );
+    app.controls.update();
     return new Promise(function (resolve, reject) {
           animate();
           resolve();
     });
 }
 function animate() {
-    guiInstance.stats.begin();
+    app.gui.stats.begin();
 
-    for (var j = 0; j < sceneInstance.scene.children.length; j++) {
-        var child = sceneInstance.scene.children[j];
-        if (child.name === "meshObject") {
-            child.rotation.x += guiInstance.params.speed;
-            child.rotation.y += guiInstance.params.speed;
-        }
+    for (var j = 0; j < app.meshes.length; j++) {
+        app.meshes[j].rotation.x += app.gui.params.speed;
+        app.meshes[j].rotation.y += app.gui.params.speed;
     }
-    guiInstance.stats.end();
+    app.gui.stats.end();
 
     requestAnimationFrame( animate );
-    sceneInstance.controls.update();
-    sceneInstance.renderer.render( sceneInstance.scene, sceneInstance.camera );
-
+    app.controls.update();
+    app.renderer.clear();
+    app.renderer.render( app.scene, app.camera );
 }
 init();

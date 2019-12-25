@@ -15,33 +15,38 @@ class Material extends THREE.ShaderMaterial{
             fog: false,
             type: shader.type
         });
-
-        if(guiInstance.params.normalMap){
+        if(app.gui.params.normalMap){
             this.defines["USE_NORMALMAP"] = "";
-            var newNormalMap = textureMap[guiInstance.params.texture][4].clone();
+            var newNormalMap = app.textureMap[app.gui.params.texture][4].clone();
             this.uniforms.normalMap.value = newNormalMap;
             this.normalMap = newNormalMap;
             this.uniforms.normalScale.value = new THREE.Vector2(1, 1);
             this.normalMap.needsUpdate = true;
             this.uniforms.normalMap.value.needsUpdate = true;
         }
-        this.color = new THREE.Color(textureMap[guiInstance.params.texture][1]);
-        this.uniforms.diffuse.value = new THREE.Color(textureMap[guiInstance.params.texture][1]);
+        this.color = new THREE.Color(app.textureMap[app.gui.params.texture][1]);
+        this.uniforms.diffuse.value = new THREE.Color(app.textureMap[app.gui.params.texture][1]);
 
-        var newTexture = textureMap[guiInstance.params.texture][2].clone();
+        var newTexture = app.textureMap[app.gui.params.texture][2].clone();
         this.uniforms.map.value = newTexture;
         this.map = newTexture;
 
-        var newBumpMap = textureMap[guiInstance.params.texture][3].clone();
+        var newBumpMap = app.textureMap[app.gui.params.texture][3].clone();
         this.uniforms.bumpMap.value = newBumpMap;
         this.bumpMap = newBumpMap;
 
-        var newAOMap = textureMap[guiInstance.params.texture][6].clone();
+        var newAOMap = app.textureMap[app.gui.params.texture][6].clone();
         this.uniforms.aoMap.value = newAOMap;
         this.aoMap = newAOMap;
 
+/*
+        var envMap = app.skyboxMap["skyBox"][1].clone();
+        this.uniforms.envMap.value = envMap;
+        this.envMap = envMap;
+*/
+
         if(this.uniforms.specularMap) {
-            var newSpecularMap = textureMap[guiInstance.params.texture][2].clone();
+            var newSpecularMap = app.textureMap[app.gui.params.texture][2].clone();
             this.uniforms.specularMap.value = newSpecularMap;
             this.specularMap = newSpecularMap;
             this.uniforms.specularMap.needsUpdate = true;
@@ -53,7 +58,6 @@ class Material extends THREE.ShaderMaterial{
             this.uniforms.shininess.value = 128;
             this.uniforms.shininess.needsUpdate = true;
         }
-        //this.uniforms.specular.value = new THREE.Color(textureMap['wood1'][1]);
 
         this.uniforms.bumpScale.value = 1;
         this.side = THREE.FrontSide;
@@ -67,6 +71,9 @@ class Material extends THREE.ShaderMaterial{
         this.uniforms.aoMap.needsUpdate = true;
         this.aoMap.needsUpdate = true;
 
+/*        this.uniforms.envMap.needsUpdate = true;
+        this.envMap.needsUpdate = true;*/
+
         this.uniforms.bumpScale.needsUpdate = true;
 
         this.needsUpdate = true;
@@ -76,38 +83,35 @@ class Material extends THREE.ShaderMaterial{
         PBR : {data: THREE.ShaderLib.standard, type: "PBR" }
     };
     applyMaps(mapName){
-        this.color = new THREE.Color(textureMap[mapName][1]);
-        this.uniforms.diffuse.value = new THREE.Color(textureMap[mapName][1]);
+        this.color = new THREE.Color(app.textureMap[mapName][1]);
+        this.uniforms.diffuse.value = new THREE.Color(app.textureMap[mapName][1]);
 
-        //this.uniforms.specular.value = new THREE.Color(textureMap[mapName][1]);
-        //this.uniforms.specular.needsUpdate = true;
-
-        var newTexture = textureMap[mapName][2].clone();
+        var newTexture = app.textureMap[mapName][2].clone();
         this.uniforms.map.value = newTexture;
         this.map = newTexture;
         this.map.needsUpdate = true;
 
-        if(guiInstance.params.normalMap){
-            var newNormalMap = textureMap[mapName][4].clone();
+        if(app.gui.params.normalMap){
+            var newNormalMap = app.textureMap[mapName][4].clone();
             this.uniforms.normalMap.value = newNormalMap;
             this.normalMap = newNormalMap;
             this.normalMap.needsUpdate = true;
         } else {
             this.normalMap = null;
-            var newBumpMap = textureMap[mapName][3].clone();
+            var newBumpMap = app.textureMap[mapName][3].clone();
             this.uniforms.bumpMap.value = newBumpMap;
             this.bumpMap = newBumpMap;
             this.bumpMap.needsUpdate = true;
         }
 
-        var newSpecularMap = textureMap[mapName][2].clone();
+        var newSpecularMap = app.textureMap[mapName][2].clone();
         if(this.uniforms.specularMap) {
             this.uniforms.specularMap.value = newSpecularMap;
             this.specularMap = newSpecularMap;
             this.specularMap.needsUpdate = true;
         }
 
-        var newAOMap = textureMap[mapName][6].clone();
+        var newAOMap = app.textureMap[mapName][6].clone();
         this.uniforms.aoMap.value = newAOMap;
         this.aoMap = newAOMap;
         this.aoMap.needsUpdate = true;
@@ -125,23 +129,22 @@ class Material extends THREE.ShaderMaterial{
         var i2,u,v;
         if(this.uniforms.aoMap.value) {
             this.uniforms.aoMap.value.repeat.set(valueX, valueY);
-            for (var j = 0; j < sceneInstance.scene.children.length; j++) {
-                var child = sceneInstance.scene.children[j];
-                if (child.name === "meshObject") {
-                    for (var i = 0; i < child.geometry.attributes.uv.array.length / 2; i++) {
-                        i2 = i * 2;
-                        u = this.defaultAttributeValues.uv[i2] * this.aoMap.repeat.x;
-                        v = this.defaultAttributeValues.uv[i2 + 1] * this.aoMap.repeat.y;
-                        child.geometry.attributes.uv.array[i2] = u;
-                        child.geometry.attributes.uv2.array[i2] = u;
-                        child.geometry.attributes.uv.array[i2 + 1] = v;
-                        child.geometry.attributes.uv2.array[i2 + 1] = v;
-                    }
-                    child.geometry.attributes.uv.needsUpdate = true;
-                    child.geometry.attributes.uv2.needsUpdate = true;
+            for (var j = 0; j < app.meshes.length; j++) {
+                var mesh = app.meshes[j];
+                mesh.material.defaultAttributeValues.uv = mesh.geometry.attributes.uv.array.slice();
+                for (var i = 0; i < mesh.geometry.attributes.uv.array.length / 2; i++) {
+                    i2 = i * 2;
+                    u = mesh.material.defaultAttributeValues.uv[i2] * this.aoMap.repeat.x;
+                    v = mesh.material.defaultAttributeValues.uv[i2 + 1] * this.aoMap.repeat.y;
+                    mesh.geometry.attributes.uv.array[i2] = u;
+                    mesh.geometry.attributes.uv2.array[i2] = u;
+                    mesh.geometry.attributes.uv.array[i2 + 1] = v;
+                    mesh.geometry.attributes.uv2.array[i2 + 1] = v;
                 }
-            }
+                mesh.geometry.attributes.uv.needsUpdate = true;
+                mesh.geometry.attributes.uv2.needsUpdate = true;
 
+            }
             this.uniforms.aoMap.value.needsUpdate = true;
             this.uniforms.aoMap.needsUpdate = true;
 
@@ -154,7 +157,7 @@ class Material extends THREE.ShaderMaterial{
             this.uniforms.normalMap.value.repeat.set(valueX, valueY);
             this.uniforms.normalMap.needsUpdate = true;
         }
-        if(this.uniforms.specularMap.value) {
+        if(this.uniforms.specularMap && this.uniforms.specularMap.value) {
             this.uniforms.specularMap.value.repeat.set(valueX, valueY);
             this.uniforms.specularMap.needsUpdate = true;
         }
@@ -163,10 +166,8 @@ class Material extends THREE.ShaderMaterial{
         this.needsUpdate = true;
     }
     setTexturesRotation(angle = 0){
-debugger;
     }
     setTexturesCenter(centerX, centerY){
-debugger;
     }
 
 }
