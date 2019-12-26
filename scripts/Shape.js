@@ -55,14 +55,16 @@ class Shape {
         return meshes;
     }
     static changeShape(shapeName){
+        var mesh;
         for (var i = 0; i < app.meshes.length; i++) {
-            app.meshes[i].geometry.dispose();
-            app.meshes[i].geometry = this.getGeometry(shapeName);
-            app.meshes[i].geometry.needsUpdate = true;
-            app.meshes[i].defaultAttributeValues.uv = app.meshes[i].geometry.attributes.uv.array.slice();
-            app.meshes[i].material.applyRepeat(app.gui.params.repeatU, app.gui.params.repeatV);
-            app.meshes[i].material.needsUpdate = true;
-            app.meshes[i].needsUpdate;
+            mesh = app.meshes[i];
+            mesh.geometry.dispose();
+            mesh.geometry = this.getGeometry(shapeName);
+            mesh.geometry.needsUpdate = true;
+            mesh.material.defaultAttributeValues.uv = app.meshes[i].geometry.attributes.uv.array.slice();
+            mesh.material.updateUvs(mesh);
+            mesh.material.needsUpdate = true;
+            mesh.needsUpdate;
         }
     }
 }

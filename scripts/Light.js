@@ -13,8 +13,8 @@ class Light {
         this.createAmbientLight();
         this.createHemisphereLight();
         this.createDirectionalLight();
-        this.createPointLight(0xffffff, new THREE.Vector3(300, 300, 300));
-        this.createPointLight(0xffffff, new THREE.Vector3(-300, 300, -300));
+        this.createPointLight(0xffffff, new THREE.Vector3(500, 500, 500));
+        this.createPointLight(0xffffff, new THREE.Vector3(-500, 500, -500));
     }
 
     createAmbientLight(_color){
@@ -25,14 +25,14 @@ class Light {
 
     createHemisphereLight (_color){
         var color = _color ? _color :  0xffffff;
-        this.hemisphereLight = new THREE.HemisphereLight( 0xffffff, 0x080820, 0.5 );
+        this.hemisphereLight = new THREE.HemisphereLight( color, 0x080820, 0.5 );
         this.scene.add(this.hemisphereLight);
     }
 
     //color: RGB, position: Vec3
     createDirectionalLight(_color, _position){
         var color = _color ? _color :  0xffffff;
-        var position = _position ? _position : new THREE.Vector3(0, 1000, 0);
+        var position = _position ? _position : new THREE.Vector3(0, 2500, 0);
 
         this.directionalLight =  new THREE.DirectionalLight(color);
         this.directionalLight.position.set(position.x, position.y, position.z);

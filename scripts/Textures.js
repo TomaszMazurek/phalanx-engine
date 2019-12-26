@@ -1,6 +1,9 @@
 class Textures {
     constructor() {
         this.textureMap = {
+            metal1: ["textures/metal/metal1/", 0xffffff, undefined, undefined, undefined, undefined, undefined, undefined],
+            metal2: ["textures/metal/metal2/", 0xffffff, undefined, undefined, undefined, undefined, undefined, undefined],
+            metal3: ["textures/metal/metal3/", 0xffffff, undefined, undefined, undefined, undefined, undefined, undefined],
             wood1: ["textures/wood/wood1/", 0xFFEEB0, undefined, undefined, undefined, undefined, undefined, undefined],
             wood2: ["textures/wood/wood2/", 0xa0522d, undefined, undefined, undefined, undefined, undefined, undefined],
             wood3: ["textures/wood/wood3/", 0xCD8500, undefined, undefined, undefined, undefined, undefined, undefined],
@@ -17,7 +20,6 @@ class Textures {
             slime: ["textures/others/slime/", 0x6bb7e9, undefined, undefined, undefined, undefined, undefined, undefined]
         };//baseColor - 2, bumpMap - 3, normalMap - 4, roughnessMap - 5, aoMap - 6, displacement - 7
         this.skyboxMap = {
-            //skyBox: ["textures/skybox/tears_of_steel_bridge/", undefined]
             kosakowo: ["textures/skybox/kosakowo/", undefined],
             quarry: ["textures/skybox/quarry/", undefined],
             bethnal: ["textures/skybox/bethnal/", undefined],

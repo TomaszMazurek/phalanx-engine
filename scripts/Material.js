@@ -15,6 +15,7 @@ class Material extends THREE.ShaderMaterial{
             fog: false,
             type: shader.type
         });
+
         if(app.gui.params.normalMap){
             this.defines["USE_NORMALMAP"] = "";
             var newNormalMap = app.textureMap[app.gui.params.texture][4].clone();
@@ -39,11 +40,13 @@ class Material extends THREE.ShaderMaterial{
         this.uniforms.aoMap.value = newAOMap;
         this.aoMap = newAOMap;
 
-/*
-        var envMap = app.skyboxMap["skyBox"][1].clone();
-        this.uniforms.envMap.value = envMap;
-        this.envMap = envMap;
-*/
+        if(app.gui.params.envMap) {
+            var envMap = app.scene.background;
+            this.uniforms.envMap.value = envMap;
+            this.envMap = envMap;
+            this.uniforms.envMap.needsUpdate = true;
+            this.envMap.needsUpdate = true;
+        }
 
         if(this.uniforms.specularMap) {
             var newSpecularMap = app.textureMap[app.gui.params.texture][2].clone();
@@ -70,9 +73,6 @@ class Material extends THREE.ShaderMaterial{
 
         this.uniforms.aoMap.needsUpdate = true;
         this.aoMap.needsUpdate = true;
-
-/*        this.uniforms.envMap.needsUpdate = true;
-        this.envMap.needsUpdate = true;*/
 
         this.uniforms.bumpScale.needsUpdate = true;
 
@@ -119,35 +119,20 @@ class Material extends THREE.ShaderMaterial{
         this.uniformsNeedUpdate = true;
         this.needsUpdate = true;
     }
-    applyRepeat(valueX, valueY){
+    applyRepeat(valueX, valueY, mesh){
         if(this.uniforms.map.value) this.uniforms.map.value.repeat.set(valueX, valueY);
         if(this.map) this.map.repeat.set(valueX, valueY);
         this.uniforms.map.needsUpdate = true;
         this.map.needsUpdate = true;
 
         //Ambient Occlusion
-        var i2,u,v;
         if(this.uniforms.aoMap.value) {
             this.uniforms.aoMap.value.repeat.set(valueX, valueY);
-            for (var j = 0; j < app.meshes.length; j++) {
-                var mesh = app.meshes[j];
-                for (var i = 0; i < mesh.geometry.attributes.uv.array.length / 2; i++) {
-                    i2 = i * 2;
-                    u = mesh.material.defaultAttributeValues.uv[i2] * this.aoMap.repeat.x;
-                    v = mesh.material.defaultAttributeValues.uv[i2 + 1] * this.aoMap.repeat.y;
-                    mesh.geometry.attributes.uv.array[i2] = u;
-                    mesh.geometry.attributes.uv2.array[i2] = u;
-                    mesh.geometry.attributes.uv.array[i2 + 1] = v;
-                    mesh.geometry.attributes.uv2.array[i2 + 1] = v;
-                }
-                mesh.geometry.attributes.uv.needsUpdate = true;
-                mesh.geometry.attributes.uv2.needsUpdate = true;
-
-            }
-            this.uniforms.aoMap.value.needsUpdate = true;
-            this.uniforms.aoMap.needsUpdate = true;
-
         }
+
+        this.uniforms.aoMap.value.needsUpdate = true;
+        this.uniforms.aoMap.needsUpdate = true;
+
         if(this.uniforms.bumpMap.value) {
             this.uniforms.bumpMap.value.repeat.set(valueX, valueY);
             this.uniforms.bumpMap.needsUpdate = true;
@@ -164,11 +149,45 @@ class Material extends THREE.ShaderMaterial{
         this.uniformsNeedUpdate = true;
         this.needsUpdate = true;
     }
+    applyOffset(valueX, valueY, mesh){
+        if(this.uniforms.map.value) this.uniforms.map.value.offset.set(valueX, valueY);
+        if(this.map) this.map.offset.set(valueX, valueY);
+        this.uniforms.map.needsUpdate = true;
+        this.map.needsUpdate = true;
+
+        //Ambient Occlusion
+        if(this.uniforms.aoMap.value) {
+            this.uniforms.aoMap.value.offset.set(valueX, valueY);
+        }
+
+        this.uniforms.aoMap.value.needsUpdate = true;
+        this.uniforms.aoMap.needsUpdate = true;
+        mesh.geometry.attributes.uv.needsUpdate = true;
+        mesh.geometry.attributes.uv2.needsUpdate = true;
+        if(this.uniforms.bumpMap.value) {
+            this.uniforms.bumpMap.value.offset.set(valueX, valueY);
+            this.uniforms.bumpMap.needsUpdate = true;
+        }
+        if(this.uniforms.normalMap.value) {
+            this.uniforms.normalMap.value.offset.set(valueX, valueY);
+            this.uniforms.normalMap.needsUpdate = true;
+        }
+        if(this.uniforms.specularMap && this.uniforms.specularMap.value) {
+            this.uniforms.specularMap.value.offset.set(valueX, valueY);
+            this.uniforms.specularMap.needsUpdate = true;
+        }
+
+        this.uniformsNeedUpdate = true;
+        this.needsUpdate = true;
+    }
     setTexturesRotation(angle = 0){
-        debugger;
         var rotation = (angle * (Math.PI/180));
         this.uniforms.map.value.rotation = rotation;
         this.map.rotation = rotation;
+        var i2,u,v;
+        if(this.uniforms.aoMap.value) {
+            this.uniforms.aoMap.value.rotation = rotation;
+        }
         if(app.gui.params.normalMap) {
             this.uniforms.normalMap.value.rotation = rotation;
         } else {
@@ -177,6 +196,45 @@ class Material extends THREE.ShaderMaterial{
         this.uniforms.aoMap.value.rotation = rotation;
     }
     setTexturesCenter(centerX, centerY){
-    }
+        this.uniforms.map.value.center.set(centerX, centerY);
+        this.map.center.set(centerX, centerY);
+        if(app.gui.params.normalMap) {
+            this.uniforms.normalMap.value.center.set(centerX, centerY);
+            this.normalMap.center.set(centerX, centerY);
+            this.normalMap.needsUpdate = true;
+        }
 
+        this.uniforms.bumpMap.value.center.set(centerX, centerY);
+        this.bumpMap.center.set(centerX, centerY);
+        this.uniforms.bumpMap.needsUpdate = true;
+        this.bumpMap.needsUpdate = true;
+
+        this.uniforms.aoMap.value.center.set(centerX, centerY);
+        this.aoMap.center.set(centerX, centerY);
+
+        this.map.needsUpdate = true;
+        this.aoMap.needsUpdate = true;
+    }
+    updateUvs (mesh){
+        var i2,u,v,
+            uvVector = new THREE.Vector2();
+
+        for (var i = 0; i < mesh.geometry.attributes.uv.array.length / 2; i++) {
+            i2 = i * 2;
+            u = mesh.material.defaultAttributeValues.uv[i2] + this.aoMap.offset.x;
+            v = mesh.material.defaultAttributeValues.uv[i2 + 1] + this.aoMap.offset.y;
+            uvVector.set(u, v);
+            uvVector.rotateAround(this.map.center, this.map.rotation);
+            u = uvVector.x * this.map.repeat.x;
+            v = uvVector.y * this.map.repeat.y;
+
+            mesh.geometry.attributes.uv.array[i2] = u;
+            mesh.geometry.attributes.uv2.array[i2] = u;
+            mesh.geometry.attributes.uv.array[i2 + 1] = v;
+            mesh.geometry.attributes.uv2.array[i2 + 1] = v;
+        }
+        mesh.geometry.attributes.uv.needsUpdate = true;
+        mesh.geometry.attributes.uv2.needsUpdate = true;
+
+    }
 }

@@ -23,16 +23,13 @@ class MinMaxGUIHelper {
 
 class GUI {
     constructor() {
-        this.meshes = app.scene.getMeshes();
         this.stats = new Stats();
         this.stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
 
         this.params = {
             speed : 0.001,
             pointLightPower: 0,
-            pointLightShadow: true,
             directionalLightPower: 0.7,
-            directionalLightShadow: true,
             bumpScaleX : 1.0,
             bumpScaleY : 1.0,
             shaderBumpScaleX : 1.0,
@@ -43,15 +40,18 @@ class GUI {
             roughness : 0.8,
             metalness : 0,
             shininess : 128,
-            texture: "wood1",
+            texture: "metal3",
             skyBox: "bethnal",
-            texOriginX: 0,
-            texOriginY: 0,
+            texOriginX: 0.5,
+            texOriginY: 0.5,
             texRotation: 0,
             repeatU : 1,
             repeatV : 1,
+            offsetU: 0,
+            offsetV: 0,
             normalMap: true,
-            shape: "Box",
+            envMap: true,
+            shape: "Sphere",
             near : 500,
             far : 25000,
             fov : 30,
@@ -63,35 +63,19 @@ class GUI {
         //lights
         this.lights = this.gui.addFolder('Lights');
         this.lights.add(this.params, 'pointLightPower', 0.0, 3.0).onChange(function(value) {
-            for (var i = 0; i < app.scene.light.pointLights.length ; i++) {
-                app.scene.light.pointLights[i].intensity = value > 0.2 ? value: 0;
+            for (var i = 0; i < app.light.pointLights.length ; i++) {
+                app.light.pointLights[i].intensity = value > 0.2 ? value: 0;
 
-                app.scene.light.pointLights[i].bulb.material.emissiveIntensity = value  > 0.2 ? value + 0.2: 0;
-                app.scene.light.pointLights[i].bulb.material.opacity = value > 0.2 ? 1: 0.5;
-
-                app.scene.light.pointLights[i].shadow.camera.near = app.gui.params.near;
-                app.scene.light.pointLights[i].shadow.camera.far = app.gui.params.far;
-                app.scene.light.pointLights[i].shadow.camera.fov = app.gui.params.fov;
-            }
-        });
-        this.lights.add(this.params, 'pointLightShadow').onChange(function(value) {
-            for (var i = 0; i < app.scene.light.pointLights.length ; i++) {
-                app.scene.light.pointLights[i].castShadow = value;
+                app.light.pointLights[i].bulb.material.emissiveIntensity = value  > 0.2 ? value + 0.2: 0;
+                app.light.pointLights[i].bulb.material.opacity = value > 0.2 ? 1: 0.5;
             }
         });
         this.lights.add(this.params, 'directionalLightPower', 0.0, 3.0).onChange(function(value) {
-            app.scene.light.directionalLight.intensity = value > 0.2 ? value: 0;
+            app.light.directionalLight.intensity = value > 0.2 ? value: 0;
 
-            app.scene.light.directionalLight.bulb.material.emissiveIntensity = value > 0.2 ? value + 0.2: 0;
-            app.scene.light.directionalLight.bulb.material.opacity = value > 0.2 ? 1: 0.5;
+            app.light.directionalLight.bulb.material.emissiveIntensity = value > 0.2 ? value + 0.2: 0;
+            app.light.directionalLight.bulb.material.opacity = value > 0.2 ? 1: 0.5;
 
-            app.scene.light.directionalLight.shadow.camera.near = app.gui.params.near;
-            app.scene.light.directionalLight.shadow.camera.far = app.gui.params.far;
-            app.scene.light.directionalLight.shadow.camera.fov = app.gui.params.fov;
-
-        });
-        this.lights.add(this.params, 'directionalLightShadow').onChange(function(value) {
-            app.scene.light.directionalLight.castShadow = value;
         });
 
         //objects
@@ -106,7 +90,7 @@ class GUI {
         this.material = this.gui.addFolder('Material');
 
         this.material.phong = this.material.addFolder('Phong');
-        this.material.phong.add(this.params, 'shininess', 0, 500.0).onChange(function(value) {
+        this.material.phong.add(this.params, 'shininess', 1, 500.0).onChange(function(value) {
             var meshes = app.meshes;
             for (var i = 0; i < meshes.length; i++) {
                 if(meshes[i].material.uniforms.shininess) {
@@ -139,18 +123,28 @@ class GUI {
                 }
             }
         });
+        this.material.add(this.params, 'envMap', 0, 1000.0).name("Environment Map").onChange(function(value) {
+            var mesh, materialType;
+            for (var j = 0; j < app.meshes.length; j++) {
+                mesh = app.meshes[j];
+                materialType = mesh.material.type;
+                mesh.material.dispose();
+                mesh.material = new Material(Material.SHADER[materialType]);
+                mesh.material.defaultAttributeValues.uv = new Float32Array(mesh.geometry.attributes.uv.array);
+                mesh.material.needsUpdate = true;
+                mesh.material.uniformsNeedsUpdate = true;
+            }
+        });
         this.material.add(this.params, 'normalMap', 0, 1000.0).name("Normal Map").onChange(function(value) {
-            for (var j = 0; j < app.scene.children.length; j++) {
-                var child = app.scene.children[j];
-                if (child.name === "meshObject") {
-                    var bumpMap = app.textureMap[app.gui.params.texture][4].clone();
-                    var materialType = child.material.type;
-                    child.material.dispose();
-                    child.material = new Material(Material.SHADER[materialType]);
-                    child.material.defaultAttributeValues.uv = new Float32Array(child.geometry.attributes.uv.array);
-                    child.material.needsUpdate = true;
-                    child.material.uniformsNeedsUpdate = true;
-                }
+            var mesh, materialType;
+            for (var j = 0; j < app.meshes.length; j++) {
+                mesh = app.meshes[j];
+                materialType = mesh.material.type;
+                mesh.material.dispose();
+                mesh.material = new Material(Material.SHADER[materialType]);
+                mesh.material.defaultAttributeValues.uv = new Float32Array(mesh.geometry.attributes.uv.array);
+                mesh.material.needsUpdate = true;
+                mesh.material.uniformsNeedsUpdate = true;
             }
         });
         this.material.add(this.params, 'bumpScaleX', -1.0, 1.0).name("bump scale X").onChange(function(value) {
@@ -200,43 +194,51 @@ class GUI {
         this.textures.add(this.params,'add').name("load texture");
         this.textures.add(this.params, 'skyBox', app.textures.getSkyboxKeys() ).onChange(function(value) {
             app.scene.background = app.skyboxMap[value][1];
-        });
-        this.textures.add(this.params, 'texture', app.textures.getTextureKeys()/*[ 'wood1', 'wood2','wood3','wood4', 'cobble1','cobble2',
-            'cobble3','roof1', 'roof2','roof3', 'bricks1','bricks2', 'bricks3', 'slime']*/ ).onChange(function(value) {
-            for (var j = 0; j < app.scene.children.length; j++) {
-                var child = app.scene.children[j];
-                if (child.name === "meshObject") {
-                    child.material.applyMaps(value);
-                    child.material.applyMaps(value);
-
-                    child.material.applyRepeat(app.gui.params.repeatU, app.gui.params.repeatV);
-                    child.material.applyRepeat(app.gui.params.repeatU, app.gui.params.repeatV);
-
-                    child.needsUpdate = true;
-                    child.needsUpdate = true;
-                }
+            var mesh, materialType;
+            for (var j = 0; j < app.meshes.length; j++) {
+                mesh = app.meshes[j];
+                materialType = mesh.material.type;
+                mesh.material.dispose();
+                mesh.material = new Material(Material.SHADER[materialType]);
+                mesh.material.defaultAttributeValues.uv = new Float32Array(mesh.geometry.attributes.uv.array);
+                mesh.material.needsUpdate = true;
+                mesh.material.uniformsNeedsUpdate = true;
             }
         });
-        this.textures.add(this.params, 'texOriginX',0, 360).name("origin X").onChange(function(value) {
-            for (var j = 0; j < app.scene.children.length; j++) {
-                var child = app.scene.children[j];
-                if (child.name === "meshObject") {
-                    child.material.setTexturesCenter(value, app.gui.params.texOriginY);
-                    child.material.setTexturesCenter(value, app.gui.params.texOriginY);
-
-                    child.material.needsUpdate = true;
-                    child.material.needsUpdate = true;
-                }
-            }
-        });
-        this.textures.add(this.params, 'texOriginY',0, 360).name("origin Y").onChange(function(value) {
+        this.textures.add(this.params, 'texture', app.textures.getTextureKeys() ).onChange(function(value) {
             var mesh;
             for (var j = 0; j < app.meshes.length; j++) {
                 mesh = app.meshes[j];
-                mesh.phong.material.setTexturesCenter(this.params.texOriginX, value);
 
+                mesh.material.applyMaps(value);
+                mesh.material.setTexturesCenter(app.gui.params.texOriginY, app.gui.params.texOriginY);
+                mesh.material.applyRepeat(app.gui.params.repeatU, app.gui.params.repeatV);
+
+                mesh.material.updateUvs(mesh);
+                mesh.needsUpdate = true;
+            }
+        });
+        this.textures.add(this.params, 'texOriginX',0, 1).name("origin X").onChange(function(value) {
+            var mesh;
+            for (var j = 0; j < app.meshes.length; j++) {
+                mesh = app.meshes[j];
+                mesh.material.setTexturesCenter(app.gui.params.texOriginX, app.gui.params.texOriginY);
+                mesh.material.setTexturesRotation(app.gui.params.texRotation);
+                mesh.material.applyOffset(app.gui.params.offsetU, app.gui.params.offsetV);
+                mesh.material.updateUvs(mesh);
+                mesh.material.needsUpdate = true;
+
+            }
+        });
+        this.textures.add(this.params, 'texOriginY',0, 1).name("origin Y").onChange(function(value) {
+            var mesh;
+            for (var j = 0; j < app.meshes.length; j++) {
+                mesh = app.meshes[j];
+                mesh.material.setTexturesCenter(app.gui.params.texOriginX, value);
+                mesh.material.updateUvs(mesh);
                 mesh.material.uniformsNeedUpdate = true;
                 mesh.material.needsUpdate = true;
+
             }
         });
 
@@ -244,7 +246,9 @@ class GUI {
             var mesh;
             for (var j = 0; j < app.meshes.length; j++) {
                 mesh = app.meshes[j];
-                mesh.material.setTexturesRotation(value);
+                mesh.material.setTexturesRotation(value, mesh);
+                mesh.material.updateUvs(mesh);
+
                 mesh.material.uniformsNeedUpdate = true;
                 mesh.material.needsUpdate = true;
             }
@@ -255,7 +259,8 @@ class GUI {
             for (var j = 0; j < app.meshes.length; j++) {
                 mesh = app.meshes[j];
                 repeatV = mesh.material.map.repeat.y;
-                mesh.material.applyRepeat(value, repeatV);
+                mesh.material.applyRepeat(value, repeatV, mesh);
+                mesh.material.updateUvs(mesh);
 
                 mesh.material.needsUpdate = true;
                 mesh.material.uniformsNeedsUpdate = true;
@@ -267,7 +272,34 @@ class GUI {
             for (var j = 0; j < app.meshes.length; j++) {
                 mesh = app.meshes[j];
                 repeatU = mesh.material.map.repeat.x;
-                mesh.material.applyRepeat(repeatU, value);
+                mesh.material.applyRepeat(repeatU, value, mesh);
+                mesh.material.updateUvs(mesh);
+
+                mesh.material.needsUpdate = true;
+                mesh.material.uniformsNeedsUpdate = true;
+
+            }
+        });
+        this.textures.add(this.params, 'offsetU',0, 1).name("offset U").onChange(function(value) {
+            var mesh, offsetV;
+            for (var j = 0; j < app.meshes.length; j++) {
+                mesh = app.meshes[j];
+                offsetV = mesh.material.map.offset.y;
+                mesh.material.applyOffset(value, offsetV, mesh);
+                mesh.material.updateUvs(mesh);
+
+                mesh.material.needsUpdate = true;
+                mesh.material.uniformsNeedsUpdate = true;
+            }
+        });
+
+        this.textures.add(this.params, 'offsetV',0, 1).name("offset V").onChange(function(value) {
+            var mesh, offsetU;
+            for (var j = 0; j < app.meshes.length; j++) {
+                mesh = app.meshes[j];
+                offsetU = mesh.material.map.offset.x;
+                mesh.material.applyOffset(offsetU, value, mesh);
+                mesh.material.updateUvs(mesh);
 
                 mesh.material.needsUpdate = true;
                 mesh.material.uniformsNeedsUpdate = true;

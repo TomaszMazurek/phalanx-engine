@@ -7,6 +7,7 @@ var app = {
         renderer: null,
         camera: null,
         scene: null,
+        light: null,
         skyboxScene: null,
         meshes: null,
         selectedShape: null
@@ -28,8 +29,10 @@ async function init() {
     app.renderer.shadowMapSoft = true;
 
 //scene
-    app.scene = new Scene();
+    app.scene = new THREE.Scene();
     app.scene.background = app.skyboxMap["bethnal"][1];
+//light
+    app.light = new Light(app.scene);
 //camera
     app.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000);
     app.camera.position.z = 1000;
