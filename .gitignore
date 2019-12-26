@@ -30,6 +30,7 @@ yarn-error.log*
 #Build generated
 dist/
 build/
+textures/
 
 
 ### SublimeText ###
