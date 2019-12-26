@@ -58,6 +58,7 @@ build/
 modules.xml
 *.ipr
 
+.jpg
 
 ### System Files ###
 .DS_Store
