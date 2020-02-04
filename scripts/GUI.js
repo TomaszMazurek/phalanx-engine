@@ -129,7 +129,7 @@ class GUI {
                 mesh = app.meshes[j];
                 materialType = mesh.material.type;
                 mesh.material.dispose();
-                mesh.material = new Material(Material.SHADER[materialType]);
+                mesh.material = new Material(SHADER[materialType]);
                 mesh.material.defaultAttributeValues.uv = new Float32Array(mesh.geometry.attributes.uv.array);
                 mesh.material.needsUpdate = true;
                 mesh.material.uniformsNeedsUpdate = true;
@@ -141,7 +141,7 @@ class GUI {
                 mesh = app.meshes[j];
                 materialType = mesh.material.type;
                 mesh.material.dispose();
-                mesh.material = new Material(Material.SHADER[materialType]);
+                mesh.material = new Material(SHADER[materialType]);
                 mesh.material.defaultAttributeValues.uv = new Float32Array(mesh.geometry.attributes.uv.array);
                 mesh.material.needsUpdate = true;
                 mesh.material.uniformsNeedsUpdate = true;
@@ -155,7 +155,7 @@ class GUI {
                     bumpScaleY = mesh.material.uniforms.normalScale.value.y;
                     mesh.material.uniforms.normalScale.value.set(value, bumpScaleY);
                 } else {
-                    mesh.material.uniforms.bumpScale = value;
+                    mesh.material.uniforms.bumpScale.value = value;
                     mesh.material.uniforms.bumpMap.needsUpdate = true;
                 }
                 mesh.material.needsUpdate = true;
@@ -171,7 +171,7 @@ class GUI {
                     mesh.material.uniforms.normalScale.value.set(bumpScaleX, value);
                     mesh.material.uniforms.normalMap.needsUpdate = true;
                 } else {
-                    mesh.material.uniforms.bumpScale = value;
+                    mesh.material.uniforms.bumpScale.value = value;
                     mesh.material.uniforms.bumpMap.needsUpdate = true;
                 }
                 mesh.material.uniformsNeedUpdate = true;
@@ -199,7 +199,7 @@ class GUI {
                 mesh = app.meshes[j];
                 materialType = mesh.material.type;
                 mesh.material.dispose();
-                mesh.material = new Material(Material.SHADER[materialType]);
+                mesh.material = new Material(SHADER[materialType]);
                 mesh.material.defaultAttributeValues.uv = new Float32Array(mesh.geometry.attributes.uv.array);
                 mesh.material.needsUpdate = true;
                 mesh.material.uniformsNeedsUpdate = true;
@@ -282,6 +282,7 @@ class GUI {
         });
         this.textures.add(this.params, 'offsetU',0, 1).name("offset U").onChange(function(value) {
             var mesh, offsetV;
+            debugger;
             for (var j = 0; j < app.meshes.length; j++) {
                 mesh = app.meshes[j];
                 offsetV = mesh.material.map.offset.y;
@@ -295,6 +296,7 @@ class GUI {
 
         this.textures.add(this.params, 'offsetV',0, 1).name("offset V").onChange(function(value) {
             var mesh, offsetU;
+            debugger;
             for (var j = 0; j < app.meshes.length; j++) {
                 mesh = app.meshes[j];
                 offsetU = mesh.material.map.offset.x;

@@ -4,10 +4,6 @@ class Light {
         this.ambientLight = null;
         this.directionalLight =  null;
         this.pointLights = [];
-        this.shadowDiameter = 2000;
-        this.near = 500;
-        this.far = 25000;
-        this.fov = 30;
         this.scene = scene;
 
         this.createAmbientLight();
@@ -36,6 +32,7 @@ class Light {
 
         this.directionalLight =  new THREE.DirectionalLight(color);
         this.directionalLight.position.set(position.x, position.y, position.z);
+/*
 
         this.directionalLight.castShadow = true;
 
@@ -50,8 +47,9 @@ class Light {
         this.directionalLight.shadow.camera.right = this.shadowDiameter;
         this.directionalLight.shadow.camera.top = this.shadowDiameter;
         this.directionalLight.shadow.camera.bottom = -this.shadowDiameter;
+*/
 
-        this.directionalLight.shadow.bias = 0.001;
+/*        this.directionalLight.shadow.bias = 0.001;*/
         this.directionalLight.intensity = 0.7;
         this.createBulb(this.directionalLight, 50);
         this.scene.add(this.directionalLight);
@@ -65,7 +63,7 @@ class Light {
             pointLight.position.set(position.x, position.y, position.z);
             pointLight.angle = 180;
 
-            pointLight.castShadow = true;
+/*            pointLight.castShadow = true;
 
             pointLight.shadow.mapSize.width = 1024;
             pointLight.shadow.mapSize.height = 1024;
@@ -79,7 +77,7 @@ class Light {
             pointLight.shadow.camera.top = this.shadowDiameter;
             pointLight.shadow.camera.bottom = -this.shadowDiameter;
 
-            pointLight.shadow.bias = 0.001;
+            pointLight.shadow.bias = 0.001;*/
             pointLight.intensity = 0.2;
             this.pointLights.push(pointLight);
             this.scene.add(pointLight);

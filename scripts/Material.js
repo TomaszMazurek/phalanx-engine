@@ -1,3 +1,7 @@
+var SHADER = {
+    PHONG : {data: THREE.ShaderLib.phong, type: "PHONG" },
+    PBR : {data: THREE.ShaderLib.standard, type: "PBR" }
+};
 class Material extends THREE.ShaderMaterial{
     constructor(shader){
         super({
@@ -78,10 +82,6 @@ class Material extends THREE.ShaderMaterial{
 
         this.needsUpdate = true;
     }
-    static SHADER = {
-        PHONG : {data: THREE.ShaderLib.phong, type: "PHONG" },
-        PBR : {data: THREE.ShaderLib.standard, type: "PBR" }
-    };
     applyMaps(mapName){
         this.color = new THREE.Color(app.textureMap[mapName][1]);
         this.uniforms.diffuse.value = new THREE.Color(app.textureMap[mapName][1]);

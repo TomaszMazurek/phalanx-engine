@@ -33,7 +33,7 @@ class Shape {
     }
     static create(){
         var meshes = [];
-        var phongMaterial = new Material(Material.SHADER.PHONG);
+        var phongMaterial = new Material(SHADER.PHONG);
         var meshPhong = new THREE.Mesh( Shape.getGeometry(app.gui.params.shape), phongMaterial );
         meshPhong.name = "meshObject";
         meshPhong.position.set(200,50,0);
@@ -43,7 +43,7 @@ class Shape {
         app.scene.add( meshPhong );
         meshes.push(meshPhong);
 
-        var stdMaterial = new Material(Material.SHADER.PBR);
+        var stdMaterial = new Material(SHADER.PBR);
         var meshStandard = new THREE.Mesh( Shape.getGeometry(app.gui.params.shape), stdMaterial );
         meshStandard.name = "meshObject";
         meshStandard.position.set(-200,50,0);
