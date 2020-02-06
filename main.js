@@ -19,8 +19,6 @@ async function init() {
     app.textureMap = textures.textureMap;
     app.skyboxMap = textures.skyboxMap;
 
-    var shadersInstance = new Shaders();
-    app.shaderMap = await shadersInstance.populate();
 //renderer
     app.renderer = new THREE.WebGLRenderer({alpha: true});
     app.renderer.outputEncoding = THREE.sRGBEncoding;

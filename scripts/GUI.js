@@ -224,7 +224,7 @@ class GUI {
                 mesh = app.meshes[j];
                 mesh.material.setTexturesCenter(app.gui.params.texOriginX, app.gui.params.texOriginY);
                 mesh.material.setTexturesRotation(app.gui.params.texRotation);
-                mesh.material.applyOffset(app.gui.params.offsetU, app.gui.params.offsetV);
+                mesh.material.applyOffset(app.gui.params.offsetU, app.gui.params.offsetV, mesh);
                 mesh.material.updateUvs(mesh);
                 mesh.material.needsUpdate = true;
 
