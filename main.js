@@ -48,17 +48,32 @@ async function init() {
   app.gui = new GUI();
   //meshes
   app.meshes = Shape.create();
-
+  document.getElementById("loader").style.display = "none";
+  document.getElementById("loaderText").style.display = "none";
+  document.getElementById("scene-container").style.display = "block";
   document
     .getElementById("scene-container")
     .appendChild(app.renderer.domElement);
   document.body.appendChild(app.gui.gui.domElement);
+  window.addEventListener( 'resize', onWindowResize, false );
+
   app.controls.update();
   return new Promise(function (resolve, reject) {
     animate();
     resolve();
   });
 }
+window.addEventListener( 'resize', onWindowResize, false );
+
+function onWindowResize(){
+
+    app.camera.aspect = window.innerWidth / window.innerHeight;
+    app.camera.updateProjectionMatrix();
+
+    app.renderer.setSize( window.innerWidth, window.innerHeight );
+
+}
+
 function animate() {
   for (var j = 0; j < app.meshes.length; j++) {
     app.meshes[j].rotation.x += app.gui.params.speed;

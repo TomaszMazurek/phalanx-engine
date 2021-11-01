@@ -186,7 +186,7 @@ class Textures {
       texture,
       self = this,
       keyArray = Object.keys(self.textureMap);
-
+      document.getElementById("loaderText").innerHTML = "<h1>Loading Textures</h1>";
     for (i = 0; i < keyArray.length; i++) {
       var key = keyArray[i];
       var texturePromise = new Promise((resolve) => {
@@ -202,7 +202,7 @@ class Textures {
       this.textureMap[keyArray[i]][2].anisotropy = 16;
       this.textureMap[keyArray[i]][2].repeat.set(1, 1);
     }
-
+      document.getElementById("loaderText").innerHTML = "<h1>Loading Bump Maps</h1>";
     for (i = 0; i < keyArray.length; i++) {
       var key = keyArray[i];
       var texturePromise = new Promise((resolve) => {
@@ -217,7 +217,7 @@ class Textures {
       this.textureMap[keyArray[i]][3].wrapT = THREE.RepeatWrapping;
       this.textureMap[keyArray[i]][3].repeat.set(1, 1);
     }
-
+document.getElementById("loaderText").innerHTML = "<h1>Loading Normal Maps</h1>";
     for (i = 0; i < keyArray.length; i++) {
       var key = keyArray[i];
       var texturePromise = new Promise((resolve) => {
@@ -246,6 +246,7 @@ class Textures {
             this.textureMap[keyArray[i]][5].repeat.set( 1, 1 );
         }*/
 
+document.getElementById("loaderText").innerHTML = "<h1>Loading Ambient Occlusion Maps</h1>";
     for (i = 0; i < keyArray.length; i++) {
       var key = keyArray[i];
       var texturePromise = new Promise((resolve) => {
@@ -271,10 +272,11 @@ class Textures {
             this.textureMap[keyArray[i]][7].name = key+"_displacement";
             this.textureMap[keyArray[i]][7].wrapS = THREE.RepeatWrapping;
             this.textureMap[keyArray[i]][7].wrapT = THREE.RepeatWrapping;
-            this.textureMap[keyArray[i]][7].repeat.set( 1, 1 );
-        }*/
+            asdthis.textureMap[keyArray[i]][7].repeat.set( 1, 1 );
+        }asd*/
 
     var skyboxKeyArray = Object.keys(self.skyboxMap);
+document.getElementById("loaderText").innerHTML = "<h1>Loading Skybox Cubic Textures. <br /> It may take up to 1 minute at first</h1>";
     for (i = 0; i < skyboxKeyArray.length; i++) {
       var key = skyboxKeyArray[i];
       var texturePromise = new Promise((resolve) => {
