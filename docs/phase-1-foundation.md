@@ -1,7 +1,7 @@
 # Faza 1 — Fundament (plan szczegółowy)
 
 > Silnik gier w przeglądarce na three.js · nadrzędny plan: [ENGINE_PLAN.md](./ENGINE_PLAN.md)
-> Status: plan zaakceptowany do realizacji · Szacunek: ~1 tydzień pracy dorywczej
+> Status: **zaimplementowane (zadania 0–9)** · commit `57c0c36` · pozostało: weryfikacja wizualna właściciela w przeglądarce → tag `phase-1`
 
 ---
 

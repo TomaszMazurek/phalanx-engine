@@ -23,6 +23,7 @@ No manual steps — all dependencies come from npm (the old `libs/` vendoring is
 | lil-gui    | 0.21.x  | dev panels                                                                                      |
 | vite       | 8.2.x   | bundler / dev server                                                                            |
 | typescript | ~5.9    | **deliberately not TS 7.0 (tsgo)** — typescript-eslint support for 5.x is mature; revisit later |
+| @types/three | ~0.185 | three does not bundle types                                                                    |
 
 ## Structure
 
