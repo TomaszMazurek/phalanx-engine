@@ -1,7 +1,7 @@
 # Faza 1 — Fundament (plan szczegółowy)
 
 > Silnik gier w przeglądarce na three.js · nadrzędny plan: [ENGINE_PLAN.md](./ENGINE_PLAN.md)
-> Status: **zaimplementowane (zadania 0–9)** · commit `57c0c36` · pozostało: weryfikacja wizualna właściciela w przeglądarce → tag `phase-1`
+> Status: **UKOŃCZONA** · tag `phase-1` (commit `9d18b69`) · zaakceptowana wizualnie przez właściciela
 
 ---
 
