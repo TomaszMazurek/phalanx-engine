@@ -1,0 +1,4 @@
+dist/
+legacy/
+public/textures/
+package-lock.json
