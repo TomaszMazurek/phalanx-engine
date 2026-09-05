@@ -1,0 +1,46 @@
+# engine — browser game engine on three.js
+
+Material-editor-turned-game-engine. Master plan: [`docs/ENGINE_PLAN.md`](docs/ENGINE_PLAN.md),
+Phase 1 plan: [`docs/phase-1-foundation.md`](docs/phase-1-foundation.md).
+
+## Run
+
+```bash
+npm install
+npm run dev      # dev server (Vite)
+npm run build    # typecheck (tsc -b) + production build → dist/
+npm run lint     # ESLint
+npm run format   # Prettier
+```
+
+No manual steps — all dependencies come from npm (the old `libs/` vendoring is gone for good).
+
+## Stack & versions (recorded at project init — Phase 1, task 1)
+
+| Dependency | Version | Note                                                                                            |
+| ---------- | ------- | ----------------------------------------------------------------------------------------------- |
+| three      | 0.185.1 | rendering foundation; new code, **not** a migration of legacy r~120                             |
+| lil-gui    | 0.21.x  | dev panels                                                                                      |
+| vite       | 8.2.x   | bundler / dev server                                                                            |
+| typescript | ~5.9    | **deliberately not TS 7.0 (tsgo)** — typescript-eslint support for 5.x is mature; revisit later |
+
+## Structure
+
+```
+src/
+  core/        # engine, zero three.js imports (Engine, GameLoop — Phase 2)
+  render/      # three.js adapter (Renderer, CameraRig, MeshFactory, LightingRig)
+  assets/      # AssetManager, TextureLibrary, manifest
+  editor/      # dev panels (DevPanel, later MaterialEditor)
+  examples/    # usage examples (MaterialViewer — the old app reborn)
+public/
+  textures/    # PBR texture sets + skyboxes (from the legacy app)
+docs/          # plans: ENGINE_PLAN.md, phase-1-foundation.md
+legacy/        # the old materialeditor_js app — reference only, not runnable
+```
+
+## Conventions (Phase 1 rules)
+
+- No `any`, no `eval`, no globals — enforced by ESLint.
+- Only `src/render` touches three.js directly; `src/core` stays renderer-agnostic.
+- The legacy app (`legacy/`) is never modified — it is a semantic reference for porting.
