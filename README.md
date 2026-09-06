@@ -12,7 +12,8 @@ Phase 2 plan: [`docs/phase-2-core.md`](docs/phase-2-core.md).
 ## Demo
 
 **Live demo:** https://phalanx-engine.tomasz-a-mazurek.workers.dev — engine demo (menu → gameplay);
-[viewer](https://phalanx-engine.tomasz-a-mazurek.workers.dev/viewer) — material tool (Phase 3).
+[viewer](https://phalanx-engine.tomasz-a-mazurek.workers.dev/viewer) — material tool (Phase 3);
+**[game1](https://phalanx-engine.tomasz-a-mazurek.workers.dev/game1) — Arena Defense Shooter (Game 1, WIP — Sprint 0 playable)**.
 
 Locally: `npm run dev` → http://localhost:5173 (Phase 2 engine demo: menu → gameplay),
 http://localhost:5173/viewer.html (material tool).
