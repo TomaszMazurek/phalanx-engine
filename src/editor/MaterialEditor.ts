@@ -11,9 +11,15 @@
  *
  * Live-apply policy: every draft mutation re-runs draft.toDefinition(). A
  * valid result is applied IMMEDIATELY (applyUpdate is cheap — no debounce)
- * and remembered as last-known-good. A mid-edit INVALID draft (cleared id,
- * zero repeat…) is NOT applied — the target simply stays at last-known-good
- * and the status line says why (`invalid — not applied`).
+ * and remembered as last-known-good (MaterialApplier). A mid-edit INVALID
+ * draft (cleared id, zero repeat…) is NOT applied — the target simply stays
+ * at last-known-good and the status line says why (`invalid — not applied`).
+ *
+ * Slot rebuilds (wave E fix): the viewer replaces slot materials behind
+ * this panel's back on texture/shape swaps — `reapply()` pushes the
+ * last-known-good def again, so the edit survives without a draft change.
+ * The state machine is MaterialApplier (headless, unit-tested there); the
+ * `reapply()` method here is glue.
  *
  * NO UNIT TESTS BY DESIGN: lil-gui is DOM-bound (its constructor appends to
  * document.body on autoPlace) and the node test env has no DOM. The pure
@@ -35,6 +41,7 @@ import {
   type MaterialDraft,
   type MaterialMapSlot,
 } from './MaterialDraft';
+import { MaterialApplier } from './MaterialApplier';
 
 /** Where edited definitions go live. Wave E: MaterialCompiler.applyUpdate over scene meshes. */
 export interface MaterialEditorTarget {
@@ -78,6 +85,7 @@ interface SlotState {
 export class MaterialEditor {
   private readonly gui: GUI;
   private readonly deps: MaterialEditorDeps;
+  private readonly applier: MaterialApplier;
   private readonly unsubscribe: () => void;
   private importInput: HTMLInputElement | null = null;
   private statusController: Controller | null = null;
@@ -90,9 +98,18 @@ export class MaterialEditor {
   constructor(deps: MaterialEditorDeps) {
     this.deps = deps;
     this.gui = new GUI({ title: 'Material Editor' });
+    this.applier = new MaterialApplier(deps.target);
     this.build();
     this.unsubscribe = this.deps.draft.subscribe(() => this.onDraftChange());
     this.onDraftChange(); // initial live-apply: the target starts at the draft's def
+  }
+
+  /** Push the last-known-good def to the current meshes again — the viewer
+   * fires this after every slot rebuild (fresh preset materials replaced
+   * the edited one). No draft touch, no dirty change; no lastGood yet →
+   * no-op (MaterialApplier). */
+  reapply(): void {
+    this.applier.reapply();
   }
 
   dispose(): void {
@@ -388,7 +405,7 @@ export class MaterialEditor {
   private onDraftChange(): void {
     const { valid, errors, def } = this.deps.draft.toDefinition();
     if (valid && def) {
-      this.deps.target.applyDefinition(def);
+      this.applier.apply(def); // push + remember as last-known-good
       this.deps.draft.clearDirty(); // the target now holds exactly this state
       this.setStatus('');
       return;

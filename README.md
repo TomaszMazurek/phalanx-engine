@@ -22,6 +22,9 @@ http://localhost:5173/viewer.html (material tool).
 - **Material editor** — lil-gui panel over a declarative `MaterialDefinition`:
   identity, params, UV transform and per-slot maps, applied live to the scene
   (in-place updates; a shading switch recompiles). JSON export/import round-trip.
+  v1 limitation: `uri` map sources stay unbound — the compiler's resolver is
+  synchronous (never loads), so only loaded texture sets can serve a slot;
+  async URI resolution is deferred.
 - **IBL environments** — HDR presets from `public/env/manifest.json` (PMREM baked
   once per HDRI; skybox / blurred / off backgrounds).
 - **Lighting presets** — `public/lighting/presets.json` (day / dusk / arena)
@@ -33,9 +36,9 @@ Compression on the demo asset (bytes on disk, `public/models/`):
 
 | Variant                           | Bytes  | vs `.gltf` |
 | --------------------------------- | ------ | ---------- |
-| `demo-cube.gltf` (uncompressed)   | 2267 B | —          |
-| `demo-cube-draco.glb` (Draco)     | 932 B  | −59%       |
-| `demo-cube-meshopt.glb` (meshopt) | 1756 B | −23%       |
+| `demo-cube.gltf` (uncompressed)   | 3433 B | —          |
+| `demo-cube-draco.glb` (Draco)     | 1196 B | −65%       |
+| `demo-cube-meshopt.glb` (meshopt) | 2544 B | −26%       |
 
 Toy asset — the numbers favor Draco on tiny meshes; meshopt aims for load-time
 (decode on the fly), not smallest bytes.
@@ -70,7 +73,7 @@ src/
   core/        # engine, zero three.js imports (Engine, GameLoop — Phase 2)
   render/      # three.js adapter (Renderer, CameraRig, MeshFactory, LightingRig)
   assets/      # AssetManager, TextureLibrary, manifest
-  editor/      # dev panels (DevPanel, later MaterialEditor)
+  editor/      # dev panels (DevPanel, MaterialEditor + MaterialDraft)
   examples/    # usage examples (MaterialViewer — the old app reborn)
 public/
   textures/    # PBR texture sets + skyboxes (from the legacy app)
@@ -81,5 +84,6 @@ legacy/        # the old materialeditor_js app — reference only, not runnable
 ## Conventions (Phase 1 rules)
 
 - No `any`, no `eval`, no globals — enforced by ESLint.
-- Only `src/render` touches three.js directly; `src/core` stays renderer-agnostic.
+- Only `src/render` and `src/examples` touch three.js directly; `src/core` and
+  `src/editor` stay renderer-agnostic.
 - The legacy app (`legacy/`) is never modified — it is a semantic reference for porting.

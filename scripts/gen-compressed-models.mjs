@@ -151,4 +151,4 @@ const sizes = [
 for (const [name, bytes] of sizes) {
   console.log(`${bytes.toLocaleString('en-US').padStart(10)} B  ${name}`);
 }
-console.log('NOTE: the demo cube is a 648-byte toy mesh — compression overhead can exceed savings at this size; numbers are real, not cherry-picked.');
+console.log('NOTE: the demo cube is a ~1.1 KiB toy mesh — compression overhead can exceed savings at this size; numbers are real, not cherry-picked.');

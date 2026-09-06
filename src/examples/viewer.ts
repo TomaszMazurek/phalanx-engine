@@ -75,7 +75,7 @@ async function boot(): Promise<void> {
     scene: viewer.scene,
     assets: assetCache,
   });
-  new MaterialEditor({
+  const editor = new MaterialEditor({
     draft: new MaterialDraft(DEFAULT_MATERIAL_DEFINITION()),
     target: new MaterialTarget({
       // Fresh lookup every apply — shape/model swaps replace the meshes.
@@ -88,6 +88,12 @@ async function boot(): Promise<void> {
     onLighting: (preset) => applyLightingPreset(viewer.lightingRig, preset),
     textureSetIds: editorTextureSetIds(assets),
   });
+  // Late wire (wave E fix): the viewer is built BEFORE the editor (it owns
+  // the meshes the editor's target looks up), so the slot-rebuild hook is a
+  // public field assigned here, after the editor exists — every texture/
+  // shape swap installs fresh preset materials into the slots, and the
+  // editor's last-known-good def must be re-applied on top.
+  viewer.onSlotsRebuilt = () => editor.reapply();
 
   overlay.hide();
   new DevPanel(viewer);

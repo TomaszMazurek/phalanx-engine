@@ -116,6 +116,34 @@ describe('MaterialTarget', () => {
     expect(phong.shininess).toBe(77);
   });
 
+  it('material group (array): BOTH entries disposed, ONE compiled material assigned, "recompiled"', () => {
+    const phong = new THREE.MeshPhongMaterial();
+    const standard = new THREE.MeshStandardMaterial();
+    let phongDisposed = 0;
+    let standardDisposed = 0;
+    phong.addEventListener('dispose', () => {
+      phongDisposed += 1;
+    });
+    standard.addEventListener('dispose', () => {
+      standardDisposed += 1;
+    });
+    const mesh = makeMesh(phong);
+    mesh.material = [phong, standard]; // a fresh lookup can surface a group
+    const target = new MaterialTarget({ meshes: () => [mesh], resolver: nullResolver });
+
+    expect(target.applyDefinition(standardDef())).toEqual({ applied: 'recompiled' });
+
+    expect(phongDisposed).toBe(1); // every entry of the replaced group
+    expect(standardDisposed).toBe(1);
+    expect(Array.isArray(mesh.material)).toBe(false); // one def → one material
+    if (!(mesh.material instanceof THREE.MeshStandardMaterial)) {
+      throw new Error('expected a single compiled standard material');
+    }
+    expect(mesh.material.color.getHex()).toBe(0xff0000);
+    expect(mesh.material.roughness).toBe(0.25);
+    expect(mesh.material.metalness).toBe(0.75);
+  });
+
   it('looks meshes up FRESH on every applyDefinition (shape/model swaps replace them)', () => {
     const a = makeMesh(new THREE.MeshStandardMaterial());
     const b = makeMesh(new THREE.MeshStandardMaterial());

@@ -92,6 +92,19 @@ export class MaterialViewer implements System {
    * its epoch is still current (last-write-wins — see setShape). */
   private shapeEpoch = 0;
 
+  /**
+   * Late-wired hook, fired AFTER every operation that rebuilds slot
+   * materials ({@link MaterialViewer.setTexture} / normal-map toggle via
+   * rebuildMaterials, a model swap, the model→primitive rebuild) — fresh
+   * preset materials replaced whatever was applied, so the listener
+   * (viewer.ts wires the MaterialEditor's reapply) restores the edit.
+   * Optional PUBLIC FIELD rather than a constructor dep because boot order
+   * is fixed the other way: the viewer exists before the editor that
+   * depends on its meshes, so the wire happens after both are built.
+   * Async (model swap): fires once, after both clones are in place.
+   */
+  onSlotsRebuilt?: () => void;
+
   /** Simulation rotation, advanced in fixedUpdate; both meshes share it. */
   private readonly spinX = new Interpolated();
   private readonly spinY = new Interpolated();
@@ -297,6 +310,7 @@ export class MaterialViewer implements System {
       this.meshStandard = this.createMesh(-200);
       // Fresh materials don't carry the configured tiling — restore it.
       this.setRepeat(this.params.repeatU, this.params.repeatV);
+      this.onSlotsRebuilt?.(); // fresh preset materials wiped any editor apply
       return;
     }
     const side = MeshFactory.sideOf(shape);
@@ -329,6 +343,7 @@ export class MaterialViewer implements System {
     this.meshPhong = this.placeModel(phong, 200, 'phong');
     this.meshStandard = this.placeModel(standard, -200, 'standard');
     this.setRepeat(this.params.repeatU, this.params.repeatV);
+    this.onSlotsRebuilt?.(); // fresh preset materials wiped any editor apply
   }
 
   /** Put one model clone into a viewer slot: scaled to primitive slot size,
@@ -421,6 +436,7 @@ export class MaterialViewer implements System {
       root.name = `${kind}_${set.id}`;
     }
     this.setRepeat(this.params.repeatU, this.params.repeatV);
+    this.onSlotsRebuilt?.(); // fresh preset materials wiped any editor apply
   }
 
   private currentSet(): TextureSet {
