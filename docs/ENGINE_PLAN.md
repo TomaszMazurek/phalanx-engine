@@ -45,6 +45,27 @@ Konsekwencje projektowe:
    (emergent interactions, juice, feedback) — nie "czego brakuje, żeby wypełnić listę featurow".
 3. Systemy nie ratują nudnej pętli — jeśli core nie wciąga, żadna nadbudowa tego nie naprawi.
 
+### Zasada ewolucji: silnik rośnie przez gry
+
+> **"Phalanx nie ma być ukończonym silnikiem. Ma rosnąć przez gry."**
+
+Każda gra:
+
+1. **testuje inną część engine'u,**
+2. **wymusza konkretne ulepszenia,**
+3. **zostawia po sobie reusable code,**
+4. **zwiększa tempo następnego projektu.**
+
+Pierwsza może być toporna. Druga mniej. Trzecia już zacznie korzystać z gotowych
+systemów. I nagle po kilku latach nie masz „side-projectowego Three.js engine'u",
+tylko własny dojrzały warsztat do robienia gier.
+
+Konsekwencje praktyczne:
+
+- Faz 4–6 nie domykamy „dla kompletności silnika" — scope każdej dogaduje **gra**, którą na nim robimy.
+- Po każdej grze: mini-retro **„co silnik zyskał"** — reusable systemy wyławiamy świadomie, nie przy okazji.
+- Tempo następnej gry > perfekcjonizm architektoniczny; długi techniczne zapisujemy (jak nity w retro faz), nie spychamy pod dywan.
+
 ---
 
 ## Cel pozatechniczny: powrót do branży graphics
