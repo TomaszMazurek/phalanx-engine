@@ -11,7 +11,8 @@ Phase 2 plan: [`docs/phase-2-core.md`](docs/phase-2-core.md).
 
 ## Demo
 
-**Live demo:** _URL to be added after deployment (Wave E)_
+**Live demo:** https://phalanx-engine.tomasz-a-mazurek.workers.dev — engine demo (menu → gameplay);
+[viewer](https://phalanx-engine.tomasz-a-mazurek.workers.dev/viewer) — Phase 1 material viewer.
 
 Locally: `npm run dev` → http://localhost:5173 (Phase 2 engine demo: menu → gameplay),
 http://localhost:5173/viewer.html (Phase 1 material viewer).
