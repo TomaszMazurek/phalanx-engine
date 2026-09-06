@@ -76,13 +76,24 @@ export class AssetManager {
       /* progress forwarded by adapters/preload, not by bare load */
     })
       .then((value) => {
-        this.resolved.add(uri);
+        // Stale-load guard (wave-0 review #1): if release()/disposeAll()
+        // dropped this entry while the factory was pending, the URI must
+        // NOT be marked resolved — a resurrected resolved-set entry would
+        // make a later preload report it instantly complete. Identity
+        // check, not presence: the cache may hold a NEWER entry for the
+        // same URI (load after release).
+        if (this.entries.get(uri) === promise) {
+          this.resolved.add(uri);
+        }
         return value;
       })
       .catch((error: unknown) => {
-        // Failed entries must not poison the cache — retry gets a fresh load.
-        this.entries.delete(uri);
-        this.resolved.delete(uri);
+        // Same guard on failure: evict only if the entry is still OURS —
+        // deleting unconditionally would clobber a fresh retry's entry.
+        if (this.entries.get(uri) === promise) {
+          this.entries.delete(uri);
+          this.resolved.delete(uri);
+        }
         throw error;
       });
     this.entries.set(uri, promise);

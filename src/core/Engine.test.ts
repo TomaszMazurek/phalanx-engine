@@ -175,6 +175,35 @@ describe('Engine', () => {
     expect(log.filter((entry) => entry.endsWith('.dispose'))).toHaveLength(2);
   });
 
+  it('double stop() notifies each system exactly once (guarded like GameLoop.stop)', () => {
+    const log: string[] = [];
+    const engine = new Engine().addSystem(makeRecordingSystem('a', log), makeRecordingSystem('b', log));
+
+    engine.start();
+    engine.stop();
+    engine.stop();
+    engine.stop();
+
+    expect(log.filter((entry) => entry === 'a.stop')).toHaveLength(1);
+    expect(log.filter((entry) => entry === 'b.stop')).toHaveLength(1);
+  });
+
+  it('stop() before any start() is a no-op; stop-after-dispose is harmless', () => {
+    const log: string[] = [];
+    const engine = new Engine().addSystem(makeRecordingSystem('a', log));
+
+    engine.stop(); // never started → systems must not see a stop
+    expect(log).toEqual([]);
+
+    engine.start();
+    engine.dispose();
+    engine.stop(); // after dispose → no second notification, no error
+
+    expect(log.filter((entry) => entry === 'a.stop')).toHaveLength(1);
+    expect(log.filter((entry) => entry === 'a.dispose')).toHaveLength(1);
+    expect(engine.isRunning).toBe(false);
+  });
+
   it('init() awaits each system init before calling the next', async () => {
     const log: string[] = [];
     let releaseA!: () => void;

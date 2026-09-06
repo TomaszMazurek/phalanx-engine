@@ -54,8 +54,13 @@ export class Engine {
     this.loop.start();
   }
 
-  /** Stop the loop. Systems keep their state — `start()` can resume. */
+  /**
+   * Stop the loop. Idempotent like `GameLoop.stop()`: systems see exactly
+   * one stop per run — double stop() or stop-after-dispose notifies no one.
+   * Systems keep their state; `start()` can resume.
+   */
   stop(): void {
+    if (!this.loop.isRunning) return;
     this.loop.stop();
     for (const system of this.systems) {
       system.stop?.();

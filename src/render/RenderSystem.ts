@@ -35,10 +35,12 @@ export class RenderSystem implements System {
   }
 
   /**
-   * Stop rendering the current output: update() then draws NOTHING (a
-   * cleared frame) until the next setRenderOutput — not the frozen last
-   * frame. Called when the active scene exits and a DOM-only scene (the
-   * menu) takes over (phase-2 retro nit: frozen frame behind the menu).
+   * Stop rendering the current output: update() then issues NO draw call
+   * until the next setRenderOutput — and nothing is cleared either, so
+   * the last presented frame stays on screen until something draws again
+   * (a DOM-only scene like the menu is expected to fully cover it).
+   * Called when the active scene exits (phase-2 retro nit: stale frame
+   * behind the menu).
    */
   clearRenderOutput(): void {
     this.output = null;
@@ -69,8 +71,9 @@ export class RenderSystem implements System {
   }
 
   update(): void {
-    // No output → nothing to draw: a cleared frame (see clearRenderOutput),
-    // never a render call with nulls.
+    // No output → no draw call is issued (not even a clear): the previously
+    // presented frame remains on screen until something draws again — see
+    // clearRenderOutput(). Never a render call with nulls.
     if (this.output) {
       this.renderer.render(this.output.scene, this.output.camera);
     }

@@ -238,12 +238,66 @@ describe('AssetManager', () => {
     expect(manager.size).toBe(0); // but not cached either
 
     // A subsequent load starts fresh — the released promise is not reused.
+    const gateNext = deferred<string>();
+    const factoryNext = vi.fn(gatedFactory(gateNext));
+    const freshLoad = manager.load('x.glb', factoryNext);
+    expect(freshLoad).not.toBe(inFlight);
+    gateNext.resolve('fresh-value');
+    await expect(freshLoad).resolves.toBe('fresh-value');
+    expect(manager.uris()).toEqual(['x.glb']);
+  });
+
+  it('release() during an in-flight load: a late resolve does NOT mark the URI resolved', async () => {
+    const manager = new AssetManager();
+    const gate = deferred<string>();
+    manager.load('x.glb', gatedFactory(gate));
+    manager.release('x.glb');
+
+    gate.resolve('late-value');
+    await flushMicrotasks();
+    expect(manager.size).toBe(0); // released: nothing cached
+
+    // Probe the resolved set through preload: a stale entry (resolved-set
+    // resurrection after release) would report the URI instantly complete
+    // (ratio 1 before the new factory settles).
     const gate2 = deferred<string>();
     const factory2 = vi.fn(gatedFactory(gate2));
-    const fresh = manager.load('x.glb', factory2);
-    expect(fresh).not.toBe(inFlight);
-    gate2.resolve('fresh-value');
-    await expect(fresh).resolves.toBe('fresh-value');
+    const ratios: number[] = [];
+    const loading = manager.preload([{ uri: 'x.glb', factory: factory2 }], (ratio) =>
+      ratios.push(ratio),
+    );
+    expect(factory2).toHaveBeenCalledTimes(1); // fresh load started (not cached)
+    expect(ratios).not.toContain(1); // and NOT instantly complete
+    gate2.resolve('v2');
+    await expect(loading).resolves.toEqual(['v2']);
+  });
+
+  it("release() + retry: a stale REJECT must not clobber the NEW load's cache entry", async () => {
+    const manager = new AssetManager();
+    const old = deferred<string>();
+    const fresh = deferred<string>();
+    let call = 0;
+    const factory = vi.fn(
+      (_uri: string, _onProgress: (r: number) => void) =>
+        call++ === 0 ? old.promise : fresh.promise,
+    );
+
+    const first = manager.load('x.glb', factory);
+    manager.release('x.glb');
+    const second = manager.load('x.glb', factory); // fresh entry for the same URI
+    expect(second).not.toBe(first);
+
+    old.reject(new Error('stale-failure'));
+    await expect(first).rejects.toThrow('stale-failure');
+    expect(manager.uris()).toEqual(['x.glb']); // the fresh entry survived the stale catch
+
+    fresh.resolve('fresh-value');
+    await expect(second).resolves.toBe('fresh-value');
     expect(manager.uris()).toEqual(['x.glb']);
+
+    // The resolved fresh entry is cached: a third load gets the same promise.
+    const factory3 = vi.fn(() => Promise.reject(new Error('must-not-run')));
+    expect(manager.load('x.glb', factory3)).toBe(second);
+    expect(factory3).not.toHaveBeenCalled();
   });
 });
