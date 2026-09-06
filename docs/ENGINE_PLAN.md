@@ -126,6 +126,13 @@ znika (zależności z npm).
 - Komponenty zachowań (skryptowanie scen).
 - UI layer.
 - Save/load stanu gry.
+- **Tor mobile (opcjonalny, decyzja właściciela 2026-09-06):** krok 1 = **PWA** (manifest +
+  service worker + ikony; ~1 dzień; „apka" na home screenie); krok 2 = **Capacitor**
+  (natywna powłoka WebView, App Store/Play) tylko jeśli dystrybucja sklepowa stanie się
+  celem — iOS wymaga Maca+Xcode i konta Apple ($99/rok). Prawdziwy natywny port
+  (Metal/Vulkan) świadomie poza scope. Architektura już gra: granica render/,
+  akcje abstrakcyjne w InputSystem (touch = nowy binding source), target iGPU,
+  KTX2 z Fazy 3.
 
 ---
 
