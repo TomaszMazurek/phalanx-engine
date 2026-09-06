@@ -1,34 +1,37 @@
 import type { System } from './System';
+import { GameLoop } from './GameLoop';
 
 /**
- * Engine — minimal Phase 1 bootstrap (task 2 of docs/phase-1-foundation.md).
+ * Engine — composition root and system lifecycle (Phase 2 refactor).
  *
- * Owns:
- *  - system lifecycle: init → start → (update loop) → stop → dispose,
- *  - the frame loop: plain requestAnimationFrame with clamped delta time.
- *
- * Deliberately renderer-agnostic: this module must not import three.js
- * (plan decision #5). Fixed-timestep logic with interpolation is Phase 2
- * work — until then `update` receives a variable, clamped `dt`.
+ * The Engine owns: system registration, lifecycle (init → start → stop →
+ * dispose) and the wiring of systems into the GameLoop's two phases. It no
+ * longer owns the frame loop itself — that moved to GameLoop (fixed timestep
+ * with interpolation, "Fix Your Timestep"); the Engine is renderer-agnostic
+ * and must never import three.js (plan decision #5).
  */
 export class Engine {
   private readonly systems: System[] = [];
+  private readonly loop: GameLoop;
 
-  private running = false;
-  private rafId: number | null = null;
-  private lastFrameTime = 0;
-  private elapsed = 0;
-
-  /**
-   * Delta-time clamp (seconds). Protects the simulation from huge jumps
-   * after a background tab / breakpoint pause; also protects `dt = 0`
-   * first-frame edge cases.
-   */
-  private static readonly MAX_DELTA = 0.1;
+  constructor() {
+    this.loop = new GameLoop({
+      onFixedStep: (fixedDt) => {
+        for (const system of this.systems) {
+          system.fixedUpdate?.(fixedDt);
+        }
+      },
+      onFrame: (dt, alpha) => {
+        for (const system of this.systems) {
+          system.update?.(dt, alpha);
+        }
+      },
+    });
+  }
 
   /** Register systems in execution order. Chainable. */
   addSystem(...systems: System[]): this {
-    if (this.running) {
+    if (this.loop.isRunning) {
       throw new Error('Engine.addSystem() called while engine is running');
     }
     this.systems.push(...systems);
@@ -42,27 +45,18 @@ export class Engine {
     }
   }
 
-  /** Start the frame loop. Idempotent. */
+  /** Start the fixed-timestep loop. Idempotent. */
   start(): void {
-    if (this.running) return;
-    this.running = true;
-    this.lastFrameTime = performance.now();
-
+    if (this.loop.isRunning) return;
     for (const system of this.systems) {
       system.start?.();
     }
-
-    this.rafId = requestAnimationFrame(this.tick);
+    this.loop.start();
   }
 
-  /** Stop the frame loop. Systems keep their state — `start()` can resume. */
+  /** Stop the loop. Systems keep their state — `start()` can resume. */
   stop(): void {
-    if (!this.running) return;
-    this.running = false;
-    if (this.rafId !== null) {
-      cancelAnimationFrame(this.rafId);
-      this.rafId = null;
-    }
+    this.loop.stop();
     for (const system of this.systems) {
       system.stop?.();
     }
@@ -78,20 +72,6 @@ export class Engine {
   }
 
   get isRunning(): boolean {
-    return this.running;
+    return this.loop.isRunning;
   }
-
-  private tick = (now: number): void => {
-    if (!this.running) return;
-
-    const dt = Math.min((now - this.lastFrameTime) / 1000, Engine.MAX_DELTA);
-    this.lastFrameTime = now;
-    this.elapsed += dt;
-
-    for (const system of this.systems) {
-      system.update?.(dt, this.elapsed);
-    }
-
-    this.rafId = requestAnimationFrame(this.tick);
-  };
 }

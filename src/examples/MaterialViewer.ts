@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { System } from '../core/System';
+import { Interpolated } from '../core/Interpolated';
 import type { LoadedAssets, TextureSet } from '../render/TextureLibrary';
 import { MeshFactory } from '../render/MeshFactory';
 import {
@@ -15,6 +16,10 @@ import { LightingRig } from '../render/LightingRig';
  * selected texture set, skybox background, configurable lighting. The old
  * `app.*` globals are gone; state lives in `params` and the DevPanel mutates
  * it through the public setters.
+ *
+ * Phase 2 demo of the fixed-timestep pipeline (docs/phase-2-core.md, task 1):
+ * rotation advances in `fixedUpdate` at a constant 60 Hz, and `update` renders
+ * the interpolated in-between state — the pattern wave D scenes build on.
  */
 export interface ViewerParams {
   speed: number;
@@ -54,6 +59,10 @@ export class MaterialViewer implements System {
   private meshPhong: THREE.Mesh | null = null;
   private meshStandard: THREE.Mesh | null = null;
 
+  /** Simulation rotation, advanced in fixedUpdate; both meshes share it. */
+  private readonly spinX = new Interpolated();
+  private readonly spinY = new Interpolated();
+
   constructor(assets: LoadedAssets) {
     this.assets = assets;
     this.scene.background = assets.skyboxes.get(this.params.skybox) ?? null;
@@ -73,11 +82,23 @@ export class MaterialViewer implements System {
     this.meshStandard = this.createMesh(-200);
   }
 
-  update(_dt: number, _elapsed: number): void {
+  /** Deterministic rotation advance — one fixed step (1/60 s) at a time. */
+  fixedUpdate(fixedDt: number): void {
+    // `speed` is tuned as a per-60Hz-step increment (Phase 1 was per-frame);
+    // the fixedDt× 60 factor keeps the visible rate identical on any FIXED_DT.
+    const advance = this.params.speed * fixedDt * 60;
+    this.spinX.push(this.spinX.value + advance);
+    this.spinY.push(this.spinY.value + advance);
+  }
+
+  /** Render phase: apply the interpolated rotation to both meshes. */
+  update(_dt: number, alpha: number): void {
+    const rotationX = this.spinX.read(alpha);
+    const rotationY = this.spinY.read(alpha);
     for (const mesh of [this.meshPhong, this.meshStandard]) {
       if (mesh) {
-        mesh.rotation.x += this.params.speed;
-        mesh.rotation.y += this.params.speed;
+        mesh.rotation.x = rotationX;
+        mesh.rotation.y = rotationY;
       }
     }
   }
