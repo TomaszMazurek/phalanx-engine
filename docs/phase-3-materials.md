@@ -1,7 +1,7 @@
 # Faza 3 — Render i materiały (plan szczegółowy)
 
 > Silnik gier w przeglądarce na three.js · nadrzędny plan: [ENGINE_PLAN.md](./ENGINE_PLAN.md)
-> Status: **PLAN** · poprzednia: [phase-2-core.md](./phase-2-core.md) (UKOŃCZONA, tag `phase-2`)
+> Status: **UKOŃCZONA** · tag `phase-3` · zaakceptowana wizualnie przez właściciela · demo: https://phalanx-engine.tomasz-a-mazurek.workers.dev/viewer · poprzednia: [phase-2-core.md](./phase-2-core.md) (UKOŃCZONA, tag `phase-2`)
 > Szacunek: **~8–9 dni budżetu** (1,5–2 tyg. pracy dorywczej) · proces: fale + TDD + tiering modeli (jak Faza 2)
 
 ---
@@ -177,17 +177,52 @@ F3 stary komentarz SceneContext · braki testów (InputSystem DOM, Engine-wiring
 
 ## Kryteria akceptacji (checklist końcowy)
 
-- [ ] Wave 0: wszystkie 12 nity domknięte, suite rośnie o testy z 0.4 (bez regresji 51)
-- [ ] Editor: pełna kontrola map PBR + UV (repeat/offset/rotation/center) widoczna na żywo na prymitywie **i modelu glTF**
-- [ ] IBL: co najmniej 2 środowiska HDR przełączalne; różnica oświetlenia wyraźna gołym okiem; zero hacków envMap
-- [ ] Presety świateł: min. 3, przełączalne z panelu, zapisywane w JSON
-- [ ] Zapis materiału do JSON → odświeżenie strony → wczytanie → identyczny wygląd (round-trip)
-- [ ] Kompresja (jeśli fala D weszła): asset KTX2 i glTF/meshopt ładują się; liczby w README
-- [ ] `npm test` zielone (poprzednie + nowe); lint/typecheck/build czyste; `three` tylko w render/examples
-- [ ] Demo live zaktualizowane (auto-deploy), README pokazuje feature-set fazy
-- [ ] Retro w 2 zdaniach + tag `phase-3`
+- [x] Wave 0: wszystkie 12 nity domknięte, suite rośnie o testy z 0.4 (bez regresji 51)
+- [x] Editor: pełna kontrola map PBR + UV (repeat/offset/rotation/center) widoczna na żywo na prymitywie **i modelu glTF**
+- [x] IBL: co najmniej 2 środowiska HDR przełączalne; różnica oświetlenia wyraźna gołym okiem; zero hacków envMap
+- [x] Presety świateł: min. 3, przełączalne z panelu, zapisywane w JSON
+- [x] Zapis materiału do JSON → odświeżenie strony → wczytanie → identyczny wygląd (round-trip)
+- [x] Kompresja (jeśli fala D weszła): asset KTX2 i glTF/meshopt ładują się; liczby w README (KTX2 próbka: Gra 1)
+- [x] `npm test` zielone (poprzednie + nowe); lint/typecheck/build czyste; `three` tylko w render/examples
+- [x] Demo live zaktualizowane (auto-deploy), README pokazuje feature-set fazy
+- [x] Retro w 2 zdaniach + tag `phase-3`
 
 ## Definition of Done fazy
 
 Checklist + review workera-reviewer + wizualna akceptacja właściciela na żywym demo
 + tag `phase-3` + demo online.
+
+---
+
+## Retro Fazy 3 (2026-09-07)
+
+### Co poszło dobrze
+
+1. **TDD przez całą fazę, z review łapiącym realne P1.** Suite urósł 51 → 235 testów,
+   każdy plaster red-first; każda fala zamknięta reviewem PASS-WITH-NITS, wszystkie P1
+   domknięte przed akceptacją — w tym 2 z fali E (modele bez UV, re-apply edytora po
+   przebudowie slotów). P2 zamiatane w wave 0 albo świadomie odkładane z zapisem.
+2. **Proceduralne generowanie assetów jako wzorzec.** HDRI, kostka demo i warianty
+   skompresowane (draco 1196 B / meshopt 2544 B z bazy 3433 B — kostka UV, caveat
+   toy-assetu w README) powstają z deterministycznych skryptów, offline — powtarzalne
+   i bez ręcznych binariów w torze.
+3. **Proces tieringu wytrzymał całą fazę, łącznie z incydentem providera.** Zdarzenie
+   mid-D1 u z.ai (błąd 500 + zanieczyszczenie kontekstem w samym outputcie — repo czyste,
+   potwierdzone grepem i reviewem z podwyższoną czujnością); recovery: weryfikacja stanu
+   → chirurgiczna kontynuacja → review. Vertical slicing + tiering modeli (semantyka /
+   mechanika, `context:fresh`) trzymał się fali po fali.
+4. **Tempo:** budżet ~8–9 dni zamknięty w ~3 sesjach roboczych — lekcja „estymaty to
+   budżety” z Faz 1–2 potwierdzona trzeci raz z rzędu.
+
+### Co zmieniamy w kolejnych fazach / Grze 1
+
+1. **Gra 1 przejmuje stery.** Arena Defense Shooter (koncept:
+   [games/GAME-1-arena-defense.md](./games/GAME-1-arena-defense.md)) dogaduje scope
+   Faz 4+ — fizyka odkładana, dopóki gra jej nie zażąda; UI i audio wciągane do przodu.
+2. **Pierwsze zapytania Gry 1 o silnik:** próbka KTX2 (wiring + vendor kompletny, brakuje
+   natywnego `toktx`) i async resolver `uri` w mapach materiału.
+3. **Dwu-władztwo DevPanel vs MaterialEditor** — konsolidacja, gdy gra zdefiniuje swoje UI.
+   Znany P2: suwaki DevPanel inertne po przełączeniu shadingu przez edytor — udokumentowana
+   decyzja warstwowa, nie zapomniana.
+4. **Estymaty dalej budżetem, nie obietnicą** — planujemy w buforach, nie w terminach
+   (patrz retro Fazy 2, pkt 4).

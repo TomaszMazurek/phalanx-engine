@@ -3,7 +3,7 @@
 > Projekt: przebudowa `materialeditor_js` (viewer materiałów PBR, three.js r~120, kod prototypowy z 2021)
 > w silnik gier przeglądarkowych z fundamentem **three.js**.
 > Status planu: zgrubny (fazy i zakres). Szczegóły interfejsów — osobne dokumenty, po jednym na fazę.
-> Ostatnia aktualizacja: po Fazie 2 (status + retro).
+> Ostatnia aktualizacja: po Fazie 3 (status + retro).
 
 ---
 
@@ -173,6 +173,9 @@ znika (zależności z npm).
 **Kamień milowy:** dwie sceny (menu + gameplay) przełączane z paskiem ładowania, input przez akcje, demo wdrożone na publiczny URL (nadrabiamy deploy Fazy 1).
 
 ## Faza 3 — Render i materiały (~1–2 tygodnie)
+
+**Szczegółowy plan fazy:** [phase-3-materials.md](./phase-3-materials.md)
+**Status: UKOŃCZONA** · tag `phase-3` · zaakceptowana wizualnie · demo: https://phalanx-engine.tomasz-a-mazurek.workers.dev/viewer
 
 **Cel: material editor jako w pełni działające narzędzie — tu dożywa stare repo.**
 
