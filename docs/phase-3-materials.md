@@ -130,7 +130,7 @@ Wave D — **tor kompresji** (~1,5 d, opcjonalny na koniec fazy jeśli czas)
 
 | # | Zadanie | Tier | Efekt |
 | --- | --- | --- | --- |
-| D1 | KTX2Loader + transcoder Basis (vendored `public/basis/`), meshopt + Draco pod GLTFLoader (opt-in) | 🅛 | 1 asset .ktx2 + 1 .glb(meshopt) w demo manifestach |
+| D1 | KTX2Loader + transcoder Basis (vendored `public/basis/`), meshopt + Draco pod GLTFLoader (opt-in) | 🅛 | assety demo: draco+meshopt gotowe; **próbka .ktx2 odroczona do Gry 1** (potrzebuje natywnego enkodera toktx — wiring+vendory kompletne) |
 | D2 | Porównanie liczbowe: rozmiar/czas loadu PNG vs KTX2 — wpis do README/demo | 🅕 | liczby do portfolio |
 
 Wave E — **integracja + zamknięcie** (~1,5 d)

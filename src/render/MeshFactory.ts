@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { AssetManager } from '../assets/AssetManager';
-import { loadGLTF } from './GLTFAdapter';
+import { loadGLTF, type GLTFLoaderOptions } from './GLTFAdapter';
 
 /**
  * MeshFactory — primitive geometries by name (task 5) + glTF model shapes
@@ -38,12 +38,29 @@ const SHAPES: Record<string, ShapeEntry> = {
 };
 
 /**
- * Model id → public/ URI. Same demo asset GameplayScene preloads
- * (MODEL_URI in examples/GameplayScene.ts) — not imported from there on
- * purpose: render/ must not depend on examples/.
+ * Model id → public/ URI + the loader options it needs. Same demo asset
+ * GameplayScene preloads (MODEL_URI in examples/GameplayScene.ts) — not
+ * imported from there on purpose: render/ must not depend on examples/.
+ *
+ * The compressed wave-D1 variants declare extensionsRequired in their GLB
+ * JSON — loading them through the bare loader would fail, so each entry
+ * carries the opt-in flags {@link loadGLTF} needs (draco / meshopt wired by
+ * GLTFAdapter; verified headless: meshopt parses in GLTFAdapter.test.ts,
+ * draco decodes round-trip in scripts/gen-compressed-models.mjs, browser
+ * decode lands in wave E viewer verification).
  */
-const MODELS: Record<string, string> = {
-  'model:demo-cube': 'models/demo-cube.gltf',
+interface ModelEntry {
+  uri: string;
+  options?: GLTFLoaderOptions;
+}
+
+const MODELS: Record<string, ModelEntry> = {
+  'model:demo-cube': { uri: 'models/demo-cube.gltf' },
+  'model:demo-cube-draco': { uri: 'models/demo-cube-draco.glb', options: { draco: true } },
+  'model:demo-cube-meshopt': {
+    uri: 'models/demo-cube-meshopt.glb',
+    options: { meshopt: true },
+  },
 };
 
 /** Namespace prefix for glTF model shape ids (see the class doc). */
@@ -77,11 +94,15 @@ export function ensureUv1(geometry: THREE.BufferGeometry): void {
  * disposed by consumers.
  */
 export async function loadModelShape(id: string, assets: AssetManager): Promise<THREE.Object3D> {
-  const uri = MODELS[id];
-  if (!uri) {
+  const entry = MODELS[id];
+  if (!entry) {
     throw new Error(`MeshFactory: unknown model "${id}"`);
   }
-  const gltf = await assets.load(uri, loadGLTF);
+  // Compression flags ride along per model (opt-in per load); plain models
+  // keep the bare Phase 2 loader path — identical to `loadGLTF` directly.
+  const gltf = await assets.load(entry.uri, (uri, onProgress) =>
+    loadGLTF(uri, onProgress, entry.options),
+  );
   const scene = gltf.scene.clone();
   // Same uv1 duplication primitives get. The geometry is shared with the
   // cache, so this is a one-time idempotent enrichment of the cached asset;

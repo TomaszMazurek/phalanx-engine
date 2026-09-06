@@ -29,6 +29,14 @@ describe('MeshFactory model namespace', () => {
     expect(new Set(list).size).toBe(list.length); // no collisions across namespaces
   });
 
+  it('list() exposes the wave-D1 compressed demo variants', () => {
+    const list = MeshFactory.list();
+    expect(list).toContain('model:demo-cube-draco');
+    expect(list).toContain('model:demo-cube-meshopt');
+    // The viewer dropdown stays collision-free with the new namespace entries.
+    expect(new Set(list).size).toBe(list.length);
+  });
+
   it('ensureUv1 clones uv into uv1 once and leaves uv-less geometries alone', () => {
     const withUv = new THREE.BoxGeometry(1, 1, 1);
     ensureUv1(withUv);
