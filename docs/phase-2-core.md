@@ -1,7 +1,7 @@
 # Faza 2 — Rdzeń silnika (plan szczegółowy)
 
 > Silnik gier w przeglądarce na three.js · nadrzędny plan: [ENGINE_PLAN.md](./ENGINE_PLAN.md)
-> Status: **PLAN** (retro Fazy 1: [phase-1-foundation.md](./phase-1-foundation.md#retro-fazy-1-2026-09-05))
+> Status: **UKOŃCZONA** · tag `phase-2` · zaakceptowana wizualnie przez właściciela · demo: https://phalanx-engine.tomasz-a-mazurek.workers.dev
 > Szacunek: **~7 dni** (budżet, nie obietnica — patrz retro pkt 2) · pierwszy raz subagentów
 
 ---
@@ -182,19 +182,57 @@ Zależności: 3 i 4 wymagają kontraktu z fali A (System v2, EventBus). 5 niezal
 
 ## Kryteria akceptacji (checklist końcowy)
 
-- [ ] Menu → gameplay z paskiem postępu; powrót do menu; 5 switchów pod rząd bez błędów w konsoli
-- [ ] `renderer.info.memory` stabilne po 5 przełączeniach scen (brak wycieku geometrii/tekstur)
-- [ ] Podwójne/szybkie kliknięcie „Play" nie psuje stanu (token wyścigu działa)
-- [ ] Obiekt sterowany WASD **i** gamepadem; akcja `jump` bindowana do Space + przycisk pada
-- [ ] Logika biegnie z `FIXED_DT = 1/60` niezależnie od refresh rate (debug HUD pokazuje
+- [x] Menu → gameplay z paskiem postępu; powrót do menu; 5 switchów pod rząd bez błędów w konsoli
+- [x] `renderer.info.memory` stabilne po 5 przełączeniach scen (brak wycieku geometrii/tekstur)
+- [x] Podwójne/szybkie kliknięcie „Play” nie psuje stanu (token wyścigu działa)
+- [x] Obiekt sterowany WASD **i** gamepadem; akcja `jump` bindowana do Space + przycisk pada
+- [x] Logika biegnie z `FIXED_DT = 1/60` niezależnie od refresh rate (debug HUD pokazuje
       steps/ramkę; przy 144 Hz widoczne ramki z 0 substeps)
-- [ ] Przełącznik interpolacji on/off: **widoczna różnica płynności** przy throttled renderze
-- [ ] glTF ładuje się z postępem; ponowny load tego samego URI = 0 żądań sieciowych (DevTools)
-- [ ] `npm run lint` → 0 błędów; `tsc --noEmit` czysto; brak `three` w importach `src/core/**` i `src/scenes/**` (reguła ESLint)
-- [ ] Publiczny URL działa (incognito); README linkuje demo i opisuje nową architekturę core
-- [ ] Retro w 2 zdaniach w tym dokumencie po zamknięciu fazy
+- [x] Przełącznik interpolacji on/off: **widoczna różnica płynności** przy throttled renderze
+- [x] glTF ładuje się z postępem; ponowny load tego samego URI = 0 żądań sieciowych (DevTools)
+- [x] `npm run lint` → 0 błędów; `tsc --noEmit` czysto; brak `three` w importach `src/core/**` i `src/scenes/**` (reguła ESLint)
+- [x] Publiczny URL działa (incognito); README linkuje demo i opisuje nową architekturę core
+- [x] Retro w 2 zdaniach w tym dokumencie po zamknięciu fazy
 
 ## Definition of Done fazy
 
 Powyższa checklist + review subagenta-reviewer przed tagiem + wizualna akceptacja właściciela
 + commit z tagiem `phase-2` + demo online.
+
+---
+
+## Retro Fazy 2 (2026-09-06)
+
+### Co poszło dobrze
+
+1. **TDD + review przed każdym commitem.** Fale A–D zamknięte test-first (51/51 testów zielonych),
+   każdy commit po ocenie reviewera (PASS-WITH-NITS); akceptacja właściciela na żywym demie —
+   jedyny finding (kierunek „W”) poprawiony test-first (`6984ba1`).
+2. **Pierwsze realne użycie subagentów się obroniło.** Dyrektywy właściciela przyjęte w połowie
+   fazy zostały procesem: vertical slicing + contract-first, model tiering (mocny model do
+   semantyki, mały do mechanicznych plasterków), orchestrator wyłącznie integruje — kontrakty
+   z fali A wystarczyły, by fale B–D złożyły się czysto.
+3. **Tempo:** budżet ~7 dni zamknięty w ~3 sesjach roboczych (fale A–C + D/zadanie 0 w jednej
+   długiej sesji; deploy + rebrand + akceptacja w dwóch kolejnych). Zaległy z Fazy 1 deploy
+   spłacony: demo publiczne, auto-deploy na push do `master`; repo przemianowane na
+   `phalanx-engine` (kod z 2019 zostaje na gałęzi `legacy-2019`).
+4. **Zakres bez pełzania.** Checklista akceptacji odhaczona w całości — deliverable pokrywają
+   Definition of Done 1–9 (GameLoop, async sceny, AssetManager z dedupem in-flight, input przez
+   akcje, EventBus, System v2, granice importów na ESLincie, deploy, przykłady).
+
+### Co zmieniamy w Fazach 3+
+
+1. **Drobiazgi P2 z review = start backloga Fazy 3** (drobne, ale nie giną): `onResize` kamery
+   w `GameplayScene`; API czyszczenia outputu `RenderSystem` (zamrożona ostatnia klatka za menu);
+   alokacja w ścieżce interp-OFF (`read(1)`); test spike'u EMA w `DebugHUD`; pojedynczy cast
+   + nieaktualny komentarz o zero-casts; Space/`preventDefault` kontra sfokusowany przycisk „Play”;
+   `releasedEdges` przy blur/disconnect; supresja `contextmenu` dla prawego przycisku myszy;
+   reskalowanie deadzone; nity progresu `AssetManager` (in-flight oznaczany jako komplet,
+   progress po reject); nieaktualny komentarz `SceneContext` (assets bez join); brakujące testy:
+   timeline DOM `InputSystem`, dispose okablowania `Engine`, MeshSync/HUD.
+2. **`Interpolated<T>` uogólnić na transformy** (Fazy 3/4) — dziś używany ad hoc w demo;
+   fizyka (rapier, Faza 4) ma korzystać z tego samego wzorca.
+3. **Testy DOM dokładamy, gdy przybędzie logiki DOM** — dziś wystarcza weryfikacja ręczna;
+   przy edytorze (Faza 5+) staje się obowiązkowa.
+4. **Estymaty to budżety, nie obietnice** — lekcja z Fazy 1 powtórzona (~7 dni → ~3 sesje);
+   planujemy dalej w buforach, nie w terminach.

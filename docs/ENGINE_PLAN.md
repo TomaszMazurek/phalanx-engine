@@ -3,7 +3,7 @@
 > Projekt: przebudowa `materialeditor_js` (viewer materiałów PBR, three.js r~120, kod prototypowy z 2021)
 > w silnik gier przeglądarkowych z fundamentem **three.js**.
 > Status planu: zgrubny (fazy i zakres). Szczegóły interfejsów — osobne dokumenty, po jednym na fazę.
-> Ostatnia aktualizacja: po Fazie 1 (retro + plan Fazy 2).
+> Ostatnia aktualizacja: po Fazie 2 (status + retro).
 
 ---
 
@@ -79,6 +79,7 @@ znika (zależności z npm).
 ## Faza 2 — Rdzeń silnika (~2–3 tygodnie)
 
 **Szczegółowy plan fazy:** [phase-2-core.md](./phase-2-core.md) (retro Fazy 1, podział na subagentów)
+**Status: UKOŃCZONA** · tag `phase-2` · zaakceptowana wizualnie · demo: https://phalanx-engine.tomasz-a-mazurek.workers.dev
 
 **Cel: to, co odróżnia bibliotekę od silnika.**
 
