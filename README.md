@@ -1,2 +1,2 @@
 # Phalanx
-Multi-platform, openGL game engine
+web game engine
