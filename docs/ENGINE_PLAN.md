@@ -29,7 +29,11 @@
 
 ---
 
-## Zasada nadrzędna: gry na Phalanx
+## Filary projektowe Phalanx
+
+Sześć zasad — filtr dla KAŻDEJ decyzji, silnikowej i gamedevowej.
+
+### 1. 30 seconds of fun
 
 > **"Every system must extend the fun, not compensate for its absence."**
 
@@ -45,7 +49,42 @@ Konsekwencje projektowe:
    (emergent interactions, juice, feedback) — nie "czego brakuje, żeby wypełnić listę featurow".
 3. Systemy nie ratują nudnej pętli — jeśli core nie wciąga, żadna nadbudowa tego nie naprawi.
 
-### Zasada ewolucji: silnik rośnie przez gry
+### 2. Gameplay flow > systems
+
+Systemy istnieją po to, żeby podtrzymywać flow gracza — nie dla kompletności listy
+featurow silnika. Każdy system odpowiada na pytanie: „co dodaje do pętli?".
+
+### 3. Visuals > Graphics
+
+Nie chodzi o liczbę polygonów, ray tracing czy „next-gen fidelity" — tylko o to,
+**co gracz widzi i jak szybko to rozumie**.
+
+Dobre visuals to:
+
+- mocne sylwetki przeciwników,
+- czytelne kolory frakcji,
+- natychmiast rozpoznawalne pociski i bronie,
+- dobry kontrast mapy,
+- charakterystyczne efekty trafień,
+- animacja, która daje feedback,
+- spójny art direction,
+- obraz, który nie rozpada się przy 30 przeciwnikach, rakietach i sześciu wieżach naraz.
+
+**DOOM jest wzorcem**: ekran może być kompletnym chaosem, a mimo to wiesz, gdzie
+jesteś, kto cię atakuje, co właśnie trafiłeś i dokąd masz uciekać.
+Czytelność chaosu jest trudniejsza niż fidelity — i cenniejsza.
+
+### 4. Audio is gameplay
+
+Dźwięk to kanał feedbacku, nie ozdoba: strzał, trafienie, postawienie wieży,
+kroki wroga — każde mówi graczowi coś ważnego. Audio planujemy jak system gry.
+
+### 5. Performance > fidelity
+
+Target: mainstream/iGPU (RTX 3060 to górna granica testu). Stabilny frame pacing
+wygrywa z eyecandy; obraz degraduje się gracefully, nie dramatycznie.
+
+### 6. Games grow the engine
 
 > **"Phalanx nie ma być ukończonym silnikiem. Ma rosnąć przez gry."**
 
