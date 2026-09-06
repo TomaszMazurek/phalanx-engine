@@ -29,6 +29,24 @@
 
 ---
 
+## Zasada nadrzędna: gry na Phalanx
+
+> **"Every system must extend the fun, not compensate for its absence."**
+
+Geneza (właściciel, 2026-09-06): zasada szkoły **Halo** ("30 seconds of fun" — jeśli gra
+wciąga gracza 30-sekundową pętlą, to masz grę) i wzorzec **Doom**: feeling broni +
+strzelanie + mapy + muzyka = **core**; reszta to nadbudowa, która przedłuża pętlę.
+
+Konsekwencje projektowe:
+
+1. **Najpierw pętla, potem systemy** — gameplay demo (Faza 4+) musi udowodnić
+   30-sekundową pętlę ZANIM dosypiemy systemy wokół niej.
+2. Każdy nowy system w Fazach 4–6 odpowiada na pytanie: **"co dodaje do pętli?"**
+   (emergent interactions, juice, feedback) — nie "czego brakuje, żeby wypełnić listę featurow".
+3. Systemy nie ratują nudnej pętli — jeśli core nie wciąga, żadna nadbudowa tego nie naprawi.
+
+---
+
 ## Cel pozatechniczny: powrót do branży graphics
 
 Projekt jest wehikułem zmiany pracy (fintech → grafika). Konsekwencje:
