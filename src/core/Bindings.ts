@@ -75,6 +75,8 @@ export const DEFAULT_BINDINGS: BindingsConfig = {
     confirm: [{ kind: 'keyboard', code: 'Enter' }, { kind: 'gamepad', button: 0 }],
     primary: [{ kind: 'mouse', button: 0 }],
     secondary: [{ kind: 'mouse', button: 2 }],
+    toggleInterpolation: [{ kind: 'keyboard', code: 'KeyI' }],
+    back: [{ kind: 'keyboard', code: 'Escape' }],
   },
   axes: {
     moveX: {

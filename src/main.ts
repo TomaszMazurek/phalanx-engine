@@ -1,18 +1,29 @@
-import { fetchManifest } from './assets/manifest';
+import { AssetManager } from './assets/AssetManager';
+import { DEFAULT_BINDINGS } from './core/Bindings';
 import { Engine } from './core/Engine';
-import { DevPanel } from './editor/DevPanel';
+import { EventBus } from './core/EventBus';
+import { InputSystem } from './core/InputSystem';
 import { LoadingOverlay } from './editor/LoadingOverlay';
-import { MaterialViewer } from './examples/MaterialViewer';
-import { CameraRig } from './render/CameraRig';
+import { SceneProgressUIAdapter } from './editor/SceneProgressUIAdapter';
+import { GameplayScene, type ModelLoader } from './examples/GameplayScene';
+import { MenuScene } from './examples/MenuScene';
+import type { GameEvents } from './examples/GameEvents';
+import { loadGLTF } from './render/GLTFAdapter';
 import { RenderSystem } from './render/RenderSystem';
-import { TextureLibrary } from './render/TextureLibrary';
+import { SceneManager } from './scenes/SceneManager';
 
 /**
- * Phase 1 bootstrap:
- *   1. renderer (needs to exist first — anisotropy budget for the asset loader),
- *   2. manifest + textures with a loading progress overlay,
- *   3. Engine + systems (viewer → camera → render, in update order),
- *   4. dev panel once the loop is running.
+ * Phase 2 bootstrap (menu → gameplay, async scene switching):
+ *   1. renderer + bus + input + asset cache (all app-singletons, injected),
+ *   2. SceneManager with the menu as the initial scene (mounted during
+ *      engine.init(), so the first rendered frame is a fully entered scene),
+ *   3. app-level navigation: scenes emit 'menu/play' / 'game/back', THIS
+ *      module decides what a switch means — scenes never see SceneManager,
+ *   4. engine systems: sceneManager → render → input (order = contract,
+ *      comment at addSystem below).
+ *
+ * The Phase 1 material viewer lives on as a second entry: viewer.html →
+ * src/examples/viewer.ts (same boot as before, untouched).
  */
 
 async function boot(): Promise<void> {
@@ -22,25 +33,49 @@ async function boot(): Promise<void> {
     throw new Error('index.html is missing #app or #loading');
   }
   const overlay = new LoadingOverlay(overlayRoot);
+  const progressUI = new SceneProgressUIAdapter(overlay);
 
   const render = new RenderSystem(container);
-  const manifest = await fetchManifest('textures/manifest.json');
-  const assets = await new TextureLibrary().loadAll(manifest, {
-    anisotropy: render.maxAnisotropy,
-    onProgress: (ratio) => overlay.setProgress(ratio),
+  const events = new EventBus<GameEvents>();
+  const input = new InputSystem(DEFAULT_BINDINGS, window);
+  const assets = new AssetManager();
+  const loadModel: ModelLoader = loadGLTF;
+
+  const scenes = new SceneManager({ events, input }, progressUI);
+  scenes.setInitialScene(new MenuScene(events));
+
+  /** A failed switch keeps the current scene; make it visible, not silent. */
+  const reportSwitchFailure = (error: unknown): void => {
+    console.error('[scenes] switch failed:', error);
+    overlay.fail(error instanceof Error ? error.message : String(error));
+  };
+
+  // App-lifetime subscriptions (unsubscribed never — the bus outlives nothing).
+  // Scene instances are single-use (SceneManager contract): a fresh instance
+  // per switch; shared ASSETS stay cached in the AssetManager (trap #5).
+  events.on('menu/play', () => {
+    void scenes
+      .switchTo(new GameplayScene({ render, assets, input, events, loadModel }))
+      .catch(reportSwitchFailure);
+  });
+  events.on('game/back', () => {
+    void scenes.switchTo(new MenuScene(events)).catch(reportSwitchFailure);
   });
 
-  const viewer = new MaterialViewer(assets);
-  const cameraRig = new CameraRig(render);
-  render.setRenderOutput(viewer.scene, cameraRig.camera);
-
   const engine = new Engine();
-  engine.addSystem(viewer, cameraRig, render);
-  await engine.init();
+  // Registration order = per-frame contract:
+  // - sceneManager FIRST: its fixedUpdate/update delegate to the active
+  //   scene's systems (player edge-buffering → mesh-sync → hud), so they run
+  //   before anything that observes their output;
+  // - render SECOND: draws exactly the state this frame's scene updates
+  //   produced;
+  // - input LAST: its update() clears the frame's input edges — every
+  //   input consumer above must have run first (InputSystem class doc).
+  engine.addSystem(scenes, render, input);
+  await engine.init(); // SceneManager.init mounts the menu (overlay hides itself)
   engine.start();
 
   overlay.hide();
-  new DevPanel(viewer);
 }
 
 boot().catch((error: unknown) => {

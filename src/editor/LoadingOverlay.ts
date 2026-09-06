@@ -28,4 +28,9 @@ export class LoadingOverlay {
   hide(): void {
     this.root.classList.add('hidden');
   }
+
+  /** Reveal the overlay again after `hide()` — scene switches reuse one element. */
+  show(): void {
+    this.root.classList.remove('hidden');
+  }
 }
