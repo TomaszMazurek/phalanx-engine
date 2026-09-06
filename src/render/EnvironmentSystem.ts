@@ -70,6 +70,17 @@ export class EnvironmentSystem {
       throw new Error('EnvironmentSystem: apply() called after dispose()');
     }
     const hdri = await this.assets.load(preset.hdri, loadHDR);
+    // Disposed-during-load guard (wave-B review): dispose() may have run
+    // while that await was pending — the generator is freed, the PMREM
+    // cache is swept and scene.environment was already nulled. Continuing
+    // would bake on the dead generator, resurrect the environment and
+    // leak the fresh target (dispose()'s sweep already ran and will never
+    // see it). Bail. This is the only interleaving point: from here to
+    // the end of apply() nothing awaits, so no further re-check is needed
+    // and no target can be baked past a dispose.
+    if (this.disposed) {
+      return;
+    }
     // Generate-then-cache synchronously: two concurrent apply() calls for
     // the same URI await the SAME AssetManager promise, whose continuations
     // run in registration (call) order — so the first caller bakes and the

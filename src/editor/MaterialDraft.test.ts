@@ -221,6 +221,18 @@ describe('exportDefinition', () => {
     expect(serializeMaterial(round.def!)).toBe(serializeMaterial(draft.toDefinition().def!));
   });
 
+  it('carries the validated def so callers reuse this result (no second toDefinition)', () => {
+    const draft = new MaterialDraft(fullDefinition());
+    draft.setColor(0x123456);
+    const payload = exportDefinition(draft);
+    if (!('filename' in payload)) {
+      throw new Error('expected an export payload');
+    }
+    expect(payload.def).toEqual(draft.toDefinition().def); // frozen, normalized
+    expect(Object.isFrozen(payload.def)).toBe(true);
+    expect(payload.def.color).toBe(0x123456);
+  });
+
   it('returns errors and no payload for an invalid draft', () => {
     const draft = new MaterialDraft(fullDefinition());
     draft.setId(''); // mid-edit: cleared id field

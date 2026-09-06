@@ -335,10 +335,7 @@ export class MaterialEditor {
       this.setStatus(`export blocked: ${payload.errors.join('; ')}`);
       return;
     }
-    const { def } = this.deps.draft.toDefinition(); // valid — payload succeeded
-    if (def) {
-      this.deps.onExportRequest?.(def);
-    }
+    this.deps.onExportRequest?.(payload.def); // the def exportDefinition already validated
     this.download(payload.filename, payload.json);
   }
 
@@ -392,6 +389,7 @@ export class MaterialEditor {
     const { valid, errors, def } = this.deps.draft.toDefinition();
     if (valid && def) {
       this.deps.target.applyDefinition(def);
+      this.deps.draft.clearDirty(); // the target now holds exactly this state
       this.setStatus('');
       return;
     }

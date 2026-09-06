@@ -36,7 +36,13 @@ export default tseslint.config(
     // TS cache + manifest types. src/scenes/ files exist since Wave B; a
     // flat-config glob matching no files is simply inert, so extending the
     // glob ahead of a directory is safe.
-    files: ['src/core/**', 'src/scenes/**', 'src/assets/**'],
+    //
+    // Phase 3 wave C addition: src/editor is DOM/gui ONLY — panels, HUD,
+    // overlays and the pure editor data model (MaterialDraft). It must not
+    // import three either; render/MaterialTarget bridges editor definitions
+    // to meshes (the editor layer stays one-way: types flow out, no engine
+    // types flow in).
+    files: ['src/core/**', 'src/scenes/**', 'src/assets/**', 'src/editor/**'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -44,7 +50,7 @@ export default tseslint.config(
           patterns: [
             {
               group: ['three', 'three/**'],
-              message: 'src/core, src/scenes and src/assets must not import three.js directly — go through the render/ adapter layer (plan decision #5, phase-2-core.md note 9).',
+              message: 'src/core, src/scenes, src/assets and src/editor must not import three.js directly — go through the render/ adapter layer (plan decision #5, phase-2-core.md note 9).',
             },
           ],
         },

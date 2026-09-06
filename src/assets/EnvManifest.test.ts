@@ -40,13 +40,21 @@ function shippedManifest(): EnvManifest {
         blurAmount: 0,
         intensity: 1.2,
       },
+      {
+        id: 'studio-blur',
+        name: 'Studio Blur',
+        hdri: 'env/studio.hdr',
+        background: 'blur',
+        blurAmount: 0.6,
+        intensity: 0.9,
+      },
     ],
   };
 }
 
 describe('EnvManifest', () => {
   describe('validateEnvManifest()', () => {
-    it('accepts the shipped manifest with two complete presets', () => {
+    it('accepts the shipped manifest with three complete presets', () => {
       expect(validateEnvManifest(shippedManifest())).toEqual({ valid: true, errors: [] });
     });
 
@@ -264,11 +272,17 @@ describe('EnvManifest', () => {
       expect(result).toEqual({ valid: true, errors: [] });
     });
 
-    it('declares exactly the two shipped presets with the planned modes', () => {
+    it('declares exactly the three shipped presets with the planned modes', () => {
       const envs = readManifest().environments;
-      expect(envs.map((p) => p.id)).toEqual(['studio', 'sunset']);
+      expect(envs.map((p) => p.id)).toEqual(['studio', 'sunset', 'studio-blur']);
       expect(envs[0]).toMatchObject({ background: 'off', intensity: 1 });
       expect(envs[1]).toMatchObject({ background: 'skybox', intensity: 1.2 });
+      expect(envs[2]).toMatchObject({
+        background: 'blur',
+        blurAmount: 0.6,
+        intensity: 0.9,
+        hdri: 'env/studio.hdr', // same hdri as 'studio': bake-once cache reuse
+      });
     });
 
     it('references .hdr files that exist, carry a RADIANCE header and exact pixel payload', () => {

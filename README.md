@@ -12,10 +12,33 @@ Phase 2 plan: [`docs/phase-2-core.md`](docs/phase-2-core.md).
 ## Demo
 
 **Live demo:** https://phalanx-engine.tomasz-a-mazurek.workers.dev — engine demo (menu → gameplay);
-[viewer](https://phalanx-engine.tomasz-a-mazurek.workers.dev/viewer) — Phase 1 material viewer.
+[viewer](https://phalanx-engine.tomasz-a-mazurek.workers.dev/viewer) — material tool (Phase 3).
 
 Locally: `npm run dev` → http://localhost:5173 (Phase 2 engine demo: menu → gameplay),
-http://localhost:5173/viewer.html (Phase 1 material viewer).
+http://localhost:5173/viewer.html (material tool).
+
+### Material tool (Phase 3, `viewer.html`)
+
+- **Material editor** — lil-gui panel over a declarative `MaterialDefinition`:
+  identity, params, UV transform and per-slot maps, applied live to the scene
+  (in-place updates; a shading switch recompiles). JSON export/import round-trip.
+- **IBL environments** — HDR presets from `public/env/manifest.json` (PMREM baked
+  once per HDRI; skybox / blurred / off backgrounds).
+- **Lighting presets** — `public/lighting/presets.json` (day / dusk / arena)
+  applied onto the rig.
+- **glTF models** — `model:*` shapes stream through the AssetManager, including
+  the compressed variants (Draco, meshopt).
+
+Compression on the demo asset (bytes on disk, `public/models/`):
+
+| Variant                           | Bytes  | vs `.gltf` |
+| --------------------------------- | ------ | ---------- |
+| `demo-cube.gltf` (uncompressed)   | 2267 B | —          |
+| `demo-cube-draco.glb` (Draco)     | 932 B  | −59%       |
+| `demo-cube-meshopt.glb` (meshopt) | 1756 B | −23%       |
+
+Toy asset — the numbers favor Draco on tiny meshes; meshopt aims for load-time
+(decode on the fly), not smallest bytes.
 
 ## Run
 

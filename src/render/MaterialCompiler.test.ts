@@ -241,6 +241,31 @@ describe('MaterialCompiler', () => {
       expect(standard.displacementMap).toBeNull();
     });
 
+    it('cross-shading (standard def onto a phong material): shared fields applied, standard-only fields silently ignored, NO throw', () => {
+      // The documented caller-recompile contract (header of this file): a
+      // def whose shading no longer matches the material is edited only
+      // through what that class supports — MaterialTarget decides between
+      // update and recompile; the compiler itself must never explode.
+      const { tex, resolver } = makeWorld();
+      const phong = new THREE.MeshPhongMaterial();
+      expect(() => applyUpdate(phong, fullDef(), resolver)).not.toThrow();
+      expect(phong.color.getHex()).toBe(0xcc7755);
+      expect(phong.shininess).toBe(12); // routed by the material's ACTUAL class
+      expect(phong.normalScale.x).toBe(1.5);
+      expect(phong.bumpScale).toBe(0.7);
+      expect(phong.aoMapIntensity).toBe(0.9);
+      // Shared slots bound…
+      expect(phong.map).toBe(tex.base);
+      expect(phong.normalMap).toBe(tex.normal);
+      expect(phong.bumpMap).toBe(tex.bump);
+      expect(phong.aoMap).toBe(tex.ao);
+      expect(phong.displacementMap).toBe(tex.displacement);
+      // …while the standard-only fields vanish: phong has no
+      // roughness/metalness and never gains a roughnessMap slot.
+      expect('roughnessMap' in phong).toBe(false);
+      expect(tex.rough.repeat.x).toBe(1); // resolver DID serve it; it was dropped
+    });
+
     it('leaves needsUpdate untouched when nothing changes (slider round-trip)', () => {
       const { resolver } = makeWorld();
       const material = compile(fullDef(), resolver);

@@ -15,6 +15,14 @@
       "background": "skybox",
       "blurAmount": 0,
       "intensity": 1.2
+    },
+    {
+      "id": "studio-blur",
+      "name": "Studio Blur",
+      "hdri": "env/studio.hdr",
+      "background": "blur",
+      "blurAmount": 0.6,
+      "intensity": 0.9
     }
   ]
 }

@@ -42,10 +42,13 @@ import type {
 /** All map slots of a definition. */
 export type MaterialMapSlot = keyof MaterialDefinitionMaps;
 
-/** Successful export payload: what to download. */
+/** Successful export payload: what to download — plus the validated def
+ * itself, so callers (MaterialEditor.exportJson) reuse THIS result instead
+ * of running a second toDefinition() round-trip. */
 export interface ExportPayload {
   filename: string;
   json: string;
+  def: MaterialDefinition;
 }
 
 /** Outcome of {@link MaterialDraft.toDefinition}: a def only when valid. */
@@ -220,6 +223,10 @@ export class MaterialDraft {
     return this.dirtyFlag;
   }
 
+  /** Mark the working copy as applied. The editor's live-apply pipeline
+   * calls this after a valid def has been pushed to the target, so dirty
+   * reads as "has changes the target has NOT seen" — mid-edit invalid
+   * states stay dirty (they are never applied). */
   clearDirty(): void {
     this.dirtyFlag = false;
   }
@@ -279,7 +286,7 @@ export function exportDefinition(draft: MaterialDraft): ExportPayload | { errors
   if (!valid || !def) {
     return { errors };
   }
-  return { filename: `${def.id}.json`, json: serializeMaterial(def) };
+  return { filename: `${def.id}.json`, json: serializeMaterial(def), def };
 }
 
 /**

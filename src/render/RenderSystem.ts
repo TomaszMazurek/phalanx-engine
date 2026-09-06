@@ -10,19 +10,19 @@ import type { System } from '../core/System';
 export class RenderSystem implements System {
   readonly name = 'render';
 
-  private readonly renderer: THREE.WebGLRenderer;
+  private readonly gl: THREE.WebGLRenderer;
   private readonly resizeHandlers: Array<() => void> = [];
   private output: { scene: THREE.Scene; camera: THREE.Camera } | null = null;
 
   constructor(container: HTMLElement) {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    container.appendChild(this.renderer.domElement);
+    this.gl = new THREE.WebGLRenderer({ antialias: true });
+    this.gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.gl.setSize(window.innerWidth, window.innerHeight);
+    this.gl.toneMapping = THREE.ACESFilmicToneMapping;
+    container.appendChild(this.gl.domElement);
 
     window.addEventListener('resize', () => {
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      this.gl.setSize(window.innerWidth, window.innerHeight);
       for (const handler of [...this.resizeHandlers]) {
         handler();
       }
@@ -63,11 +63,18 @@ export class RenderSystem implements System {
   }
 
   get maxAnisotropy(): number {
-    return this.renderer.capabilities.getMaxAnisotropy();
+    return this.gl.capabilities.getMaxAnisotropy();
   }
 
   get domElement(): HTMLCanvasElement {
-    return this.renderer.domElement;
+    return this.gl.domElement;
+  }
+
+  /** The engine's single WebGL renderer, read-only (wave E1b): render-side
+   * systems that render THROUGH the context — EnvironmentSystem's
+   * PMREMGenerator — need it without taking ownership of it. */
+  get renderer(): THREE.WebGLRenderer {
+    return this.gl;
   }
 
   update(): void {
@@ -81,7 +88,7 @@ export class RenderSystem implements System {
 
   dispose(): void {
     this.output = null;
-    this.renderer.dispose();
-    this.renderer.domElement.remove();
+    this.gl.dispose();
+    this.gl.domElement.remove();
   }
 }

@@ -10,6 +10,12 @@ import { LightingRig } from '../render/LightingRig';
 /** Which of the two side-by-side slots; picks the preset material family. */
 type SlotKind = 'phong' | 'standard';
 
+/** Texture slots setRepeat tiles — per shading family (standard keeps the
+ * extra roughnessMap slot; neither list includes displacementMap, whose
+ * repeat the presets never tile). */
+const STANDARD_REPEAT_SLOTS = ['map', 'bumpMap', 'normalMap', 'aoMap', 'roughnessMap'] as const;
+const PHONG_REPEAT_SLOTS = ['map', 'bumpMap', 'normalMap', 'aoMap'] as const;
+
 /**
  * Slot target radius: primitives are built at Sphere scale (radius 120),
  * and the camera frames that — models are normalized to fit the same slot.
@@ -103,6 +109,33 @@ export class MaterialViewer implements System {
 
   get skyboxIds(): string[] {
     return [...this.assets.skyboxes.keys()];
+  }
+
+  /** The viewer's lighting rig (wave E1b): read-only access for preset
+   * appliers (applyLightingPreset) driving the same lights the DevPanel
+   * sliders do — the rig itself stays viewer-owned. */
+  get lightingRig(): LightingRig {
+    return this.lighting;
+  }
+
+  /**
+   * The meshes the material editor drives (wave E1b), looked up FRESH on
+   * every call — shape/model swaps replace the slot roots behind any
+   * cached reference, so callers (MaterialTarget) must never hold the
+   * result across applies. Primitives return their two root meshes
+   * (traverse visits the root itself); a model clone returns every mesh
+   * under it, all carrying the slot's single preset material.
+   */
+  getEditorMeshes(): THREE.Mesh[] {
+    const meshes: THREE.Mesh[] = [];
+    for (const root of [this.meshPhong, this.meshStandard]) {
+      root?.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          meshes.push(child);
+        }
+      });
+    }
+    return meshes;
   }
 
   init(): void {
@@ -212,9 +245,14 @@ export class MaterialViewer implements System {
     this.params.repeatV = v;
     for (const [root] of this.slots()) {
       for (const material of this.materialsOf(root)) {
-        const standard = material as THREE.MeshStandardMaterial;
-        for (const slot of ['map', 'bumpMap', 'normalMap', 'aoMap', 'roughnessMap'] as const) {
-          standard[slot]?.repeat.set(u, v);
+        if (material instanceof THREE.MeshStandardMaterial) {
+          for (const slot of STANDARD_REPEAT_SLOTS) {
+            material[slot]?.repeat.set(u, v);
+          }
+        } else if (material instanceof THREE.MeshPhongMaterial) {
+          for (const slot of PHONG_REPEAT_SLOTS) {
+            material[slot]?.repeat.set(u, v);
+          }
         }
       }
     }
