@@ -1,7 +1,7 @@
 # Faza 1 — Fundament (plan szczegółowy)
 
 > Silnik gier w przeglądarce na three.js · nadrzędny plan: [ENGINE_PLAN.md](./ENGINE_PLAN.md)
-> Status: **UKOŃCZONA** · tag `phase-1` (commit `9d18b69`) · zaakceptowana wizualnie przez właściciela
+> Status: **UKOŃCZONA** · tag `phase-1` (commit `49ec4e3`) · zaakceptowana wizualnie przez właściciela
 
 ---
 
@@ -168,3 +168,33 @@ nie ładujemy plików, których nie ma (stary kod ładował Roughness/Displaceme
 Powyższa checklist w całości odhaczona + commit z tagiem `phase-1`.
 Po Fazie 1 robimy retro: co poszło dobrze, co zmieniamy w planie Faz 2–6
 (szczebla szczegółowości tego dokumentu używamy też dla Faz 2+).
+
+---
+
+## Retro Fazy 1 (2026-09-05)
+
+### Co poszło dobrze
+
+1. **Dyscyplina zakresu.** Wszystko z sekcji „poza zakresem" faktycznie zostało poza zakresem —
+   żaden scope creep. Świadomy dług techniczny jest udokumentowany w miejscu powstania
+   (`Engine.ts` i `System.ts` mają komentarze wskazujące Fazę 2 zamiast TODO rozrzuconych po kodzie).
+2. **Architektura obroniła się bez wyjątków.** Zero importów three.js w `core/`, DI zamiast
+   globali, manifest zamiast hardcode — port znanego kodu nie wymusił ani jednego odstępstwa
+   od decyzji przyjętych w planie. Wniosek: decyzje architektoniczne Faz 2–6 można przyjmować
+   z podobną pewnością.
+3. **Checklist akceptacji spisana przed startem** została użyta dosłownie do zamknięcia fazy
+   (fresh clone, lint, konsola). Format dokumentu fazowego = kontrakt — powtarzamy dla Faz 2+.
+4. **Tempo:** cała faza (zadania 0–9) zamknęła się w jednym dniu roboczym przy 2 commitach
+   implementacyjnych — estymata ~4.75 dnia okazała się buforem, nie prognozą.
+
+### Co zmieniamy w Fazach 2–6
+
+1. **Deployment demo nie doszedł do skutku w Fazie 1.** Od teraz jawny deliverable każdej fazy
+   (dodane do [ENGINE_PLAN.md](./ENGINE_PLAN.md)); demo Fazy 1 nadrabiane w Fazie 2,
+   razem z deployem Fazy 2.
+2. **Estymaty Faz 2+ traktujemy jako budżet, nie obietnicę** — ale Faza 2 to nowy grunt
+   (timery, input, asynchroniczne sceny) w odróżnieniu od portu znanego kodu; bufor zostaje.
+3. **Pierwsze użycie subagentów przesuwa się z Fazy 1 na Fazę 2** (zadania sekwencyjne
+   Fazy 1 nie dawały parallelizmu; Faza 2 daje — patrz plan [phase-2-core.md](./phase-2-core.md)).
+4. Drobiazg: literówka w nagłówku tego dokumentu (tag `phase-1` wskazuje `49ec4e3`,
+   nie `9d18b69`) — poprawiona przy okazji retro.

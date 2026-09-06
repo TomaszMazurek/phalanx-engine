@@ -3,7 +3,7 @@
 > Projekt: przebudowa `materialeditor_js` (viewer materiałów PBR, three.js r~120, kod prototypowy z 2021)
 > w silnik gier przeglądarkowych z fundamentem **three.js**.
 > Status planu: zgrubny (fazy i zakres). Szczegóły interfejsów — osobne dokumenty, po jednym na fazę.
-> Ostatnia aktualizacja: plan wstępny.
+> Ostatnia aktualizacja: po Fazie 1 (retro + plan Fazy 2).
 
 ---
 
@@ -56,6 +56,7 @@ Projekt jest wehikułem zmiany pracy (fintech → grafika). Konsekwencje:
 ## Faza 1 — Fundament (~1 tydzień)
 
 **Szczegółowy plan fazy:** [phase-1-foundation.md](./phase-1-foundation.md)
+**Status: UKOŃCZONA** · tag `phase-1` (commit `49ec4e3`) · zaakceptowana wizualnie przez właściciela
 
 **Cel: działający, nowoczesny material viewer = pierwsza komórka silnika.**
 
@@ -77,6 +78,8 @@ znika (zależności z npm).
 
 ## Faza 2 — Rdzeń silnika (~2–3 tygodnie)
 
+**Szczegółowy plan fazy:** [phase-2-core.md](./phase-2-core.md) (retro Fazy 1, podział na subagentów)
+
 **Cel: to, co odróżnia bibliotekę od silnika.**
 
 1. **`Engine`** — bootstrap, lifecycle (init/start/update/stop), dependency injection.
@@ -88,7 +91,7 @@ znika (zależności z npm).
    (bind „jump" → klawisz; nie `if (key === ' ')` w logice).
 6. **`EventBus`** — komunikacja między systemami bez sprzężenia.
 
-**Kamień milowy:** dwie sceny (menu + gameplay) przełączane z paskiem ładowania, input przez akcje.
+**Kamień milowy:** dwie sceny (menu + gameplay) przełączane z paskiem ładowania, input przez akcje, demo wdrożone na publiczny URL (nadrabiamy deploy Fazy 1).
 
 ## Faza 3 — Render i materiały (~1–2 tygodnie)
 
@@ -127,6 +130,9 @@ znika (zależności z npm).
 
 ## Ryzyka i założenia (świadomie przyjęte)
 
+- **Target sprzętowy: mainstream 2026 — RTX 3060 i iGPU** (balans „fajerwerki vs wydajność").
+  Projektujemy pod dolną granicę (iGPU — laptopowe/integrowane grafiki); RTX 3060 to górna
+  granica sensownego testu. DLSS/denoisery poza scope — nie są celem demo.
 - **Nie robimy własnego renderera** — to różnica między realnym celem a projektem
   o pokolenie dłuższym.
 - **Fizyka dopiero w Fazie 4** — najpierw fundamenty potrzebne każdej grze; rapier łatwo dokleić później.
