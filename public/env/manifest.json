@@ -1,0 +1,20 @@
+{
+  "environments": [
+    {
+      "id": "studio",
+      "name": "Studio",
+      "hdri": "env/studio.hdr",
+      "background": "off",
+      "blurAmount": 0,
+      "intensity": 1
+    },
+    {
+      "id": "sunset",
+      "name": "Sunset",
+      "hdri": "env/sunset.hdr",
+      "background": "skybox",
+      "blurAmount": 0,
+      "intensity": 1.2
+    }
+  ]
+}

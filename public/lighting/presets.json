@@ -1,0 +1,31 @@
+{
+  "presets": [
+    {
+      "id": "day",
+      "name": "Day",
+      "ambient": { "intensity": 0.35, "color": 16777215 },
+      "hemisphere": { "intensity": 0.55, "skyColor": 12573160, "groundColor": 4208686 },
+      "directional": { "intensity": 1, "color": 16773855 },
+      "points": []
+    },
+    {
+      "id": "dusk",
+      "name": "Dusk",
+      "ambient": { "intensity": 0.25, "color": 16777215 },
+      "hemisphere": { "intensity": 0.4, "skyColor": 14191194, "groundColor": 2761784 },
+      "directional": { "intensity": 0.65, "color": 16756838 },
+      "points": [{ "intensity": 0.5, "color": 16751181 }]
+    },
+    {
+      "id": "arena",
+      "name": "Arena",
+      "ambient": { "intensity": 0.2, "color": 16777215 },
+      "hemisphere": { "intensity": 0.5, "skyColor": 11125209, "groundColor": 3025722 },
+      "directional": { "intensity": 0.9, "color": 16777215 },
+      "points": [
+        { "intensity": 0.4, "color": 16777215 },
+        { "intensity": 0.4, "color": 16777215 }
+      ]
+    }
+  ]
+}

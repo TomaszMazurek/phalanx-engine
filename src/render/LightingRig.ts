@@ -74,4 +74,67 @@ export class LightingRig {
       this.directionalBulbMaterial.opacity = on ? 0.8 : 0.15;
     }
   }
+
+  // --- additive preset hooks (src/render/LightingPresets.ts) ----------------
+  //
+  // Plain intensity/color setters used by applyLightingPreset(); they do NOT
+  // gate on the 0.2 bulb threshold — validation and defaults live in the data
+  // layer (src/assets/LightPresets.ts). Group point control stays in
+  // setPointIntensity above; per-index control is below.
+
+  /** Ambient light intensity (additive; e.g. lighting presets). */
+  setAmbientIntensity(value: number): void {
+    this.ambient.intensity = value;
+  }
+
+  /** Ambient light color as a 0xRRGGBB integer (additive; e.g. lighting presets). */
+  setAmbientColor(color: number): void {
+    this.ambient.color.setHex(color);
+  }
+
+  /** Hemisphere light intensity (additive; e.g. lighting presets). */
+  setHemisphereIntensity(value: number): void {
+    this.hemisphere.intensity = value;
+  }
+
+  /** Hemisphere sky and ground colors as 0xRRGGBB integers (additive; presets). */
+  setHemisphereColors(skyColor: number, groundColor: number): void {
+    this.hemisphere.color.setHex(skyColor);
+    this.hemisphere.groundColor.setHex(groundColor);
+  }
+
+  /** Directional light color as a 0xRRGGBB integer (additive; lighting presets). */
+  setDirectionalColor(color: number): void {
+    this.directional.color.setHex(color);
+  }
+
+  /** Number of fixed point lights in the rig (drives per-index point control). */
+  get pointLightCount(): number {
+    return this.points.length;
+  }
+
+  /**
+   * Per-light point intensity (additive to the {@link setPointIntensity}
+   * group setter). Mirrors the group semantics: values <= 0.2 count as OFF
+   * and dim that light's bulb; otherwise the bulb brightens.
+   */
+  setPointLightIntensity(index: number, value: number): void {
+    const light = this.points[index];
+    const material = this.pointBulbMaterials[index];
+    if (!light || !material) {
+      return;
+    }
+    const on = value > 0.2;
+    light.intensity = on ? value : 0;
+    material.opacity = on ? 0.8 : 0.15;
+  }
+
+  /** Per-light point color as a 0xRRGGBB integer (additive; lighting presets). */
+  setPointLightColor(index: number, color: number): void {
+    const light = this.points[index];
+    if (!light) {
+      return;
+    }
+    light.color.setHex(color);
+  }
 }

@@ -21,6 +21,14 @@ export default tseslint.config(
     },
   },
   {
+    // Node scripts (asset generators) run outside the browser; declare the
+    // few Node globals they use instead of pulling in a `globals` package.
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: { Buffer: 'readonly', console: 'readonly' },
+    },
+  },
+  {
     // Phase 2 boundary (docs/phase-2-core.md, note 9): the engine core, the
     // scene layer and the generic asset cache must stay renderer-agnostic —
     // no three.js imports outside the render/ adapter layer. Three-facing
