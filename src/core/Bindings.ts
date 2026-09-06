@@ -89,5 +89,19 @@ export const DEFAULT_BINDINGS: BindingsConfig = {
       positive: [{ kind: 'keyboard', code: 'KeyW' }],
       gamepad: { index: 1, direction: -1 },
     },
+    // Aiming: right stick only (twin-stick shooter, Game 1 Sprint 0) — no
+    // keyboard bindings, so `negative`/`positive` stay empty and the axis
+    // reads purely from the analog source. aimY inverts like moveY: right
+    // stick up reads positive.
+    aimX: {
+      negative: [],
+      positive: [],
+      gamepad: { index: 2, direction: 1 },
+    },
+    aimY: {
+      negative: [],
+      positive: [],
+      gamepad: { index: 3, direction: -1 },
+    },
   },
 };

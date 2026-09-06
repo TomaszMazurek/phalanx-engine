@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phalanx — Arena Defense (Game 1, WIP)</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #111;
+        color: #eee;
+        font-family: system-ui, sans-serif;
+      }
+      #app {
+        position: absolute;
+        inset: 0;
+      }
+      #loading {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #111;
+        z-index: 10;
+        transition: opacity 0.3s;
+      }
+      #loading.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #loading h1 {
+        font-weight: 300;
+        letter-spacing: 0.1em;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="loading"><h1>Loading…</h1></div>
+    <script type="module" src="/src/game1/main.ts"></script>
+  </body>
+</html>

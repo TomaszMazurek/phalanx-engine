@@ -14,10 +14,11 @@ export default defineConfig({
     rollupOptions: {
       // Multipage (paths relative to the project root): index.html = the
       // Phase 2 app (menu → gameplay), viewer.html = the preserved Phase 1
-      // material viewer.
+      // material viewer, game1.html = the Game 1 arena defense build.
       input: {
         index: 'index.html',
         viewer: 'viewer.html',
+        game1: 'game1.html',
       },
     },
   },
