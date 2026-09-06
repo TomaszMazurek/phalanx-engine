@@ -93,17 +93,31 @@ describe('PlayerController', () => {
     expect(controller.position.z.value).toBe(0);
   });
 
+  it('W (moveY +1) is screen-forward: away from the camera → world −Z', () => {
+    controller = makePlayer(2); // 2 units/s
+    harness.keyDown('KeyW'); // moveY +1
+
+    for (let i = 0; i < 60; i++) controller.fixedUpdate(DT); // 1 simulated second
+
+    // The default camera sits on +Z looking at the origin, so screen-forward
+    // (away from the viewer, "into the screen") is world −Z — NOT +Z, which
+    // would walk the player toward the camera.
+    expect(controller.position.z.value).toBeCloseTo(-2, 10); // 60 * 2 * 1/60, negative
+    expect(controller.position.x.value).toBe(0);
+    expect(controller.position.y.value).toBe(0);
+  });
+
   it('normalizes diagonal input to unit length', () => {
     controller = makePlayer(2);
-    harness.keyDown('KeyW'); // moveY +1
-    harness.keyDown('KeyD'); // moveX +1
+    harness.keyDown('KeyW'); // moveY +1 → −Z
+    harness.keyDown('KeyD'); // moveX +1 → +X
 
     for (let i = 0; i < 60; i++) controller.fixedUpdate(DT);
 
     // (1,1)/√2 * 2 * 1 s = √2 per axis — not the √2-times-faster diagonal
     // an unnormalized (1,1) * speed would produce.
     expect(controller.position.x.value).toBeCloseTo(Math.sqrt(2), 10);
-    expect(controller.position.z.value).toBeCloseTo(Math.sqrt(2), 10);
+    expect(controller.position.z.value).toBeCloseTo(-Math.sqrt(2), 10); // −Z: screen-forward
   });
 
   it('does not read raw key edges in fixedUpdate — jump goes through the update-phase buffer', () => {

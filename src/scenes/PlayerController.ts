@@ -8,6 +8,15 @@ import type { System } from '../core/System';
  * (y = 0) from abstract input axes, with a fixed-step hop. No three.js
  * here: the owning scene copies `lastRenderedPosition` onto a mesh.
  *
+ * === Axis convention (screen-space) ===
+ * moveY is SCREEN-forward — "away from the default camera", i.e. W walks
+ * the player INTO the screen. moveX stays world +X (D = right). The
+ * controller assumes the owning scene's camera sits on +Z looking toward
+ * the origin (see GameplayScene), so screen-forward maps to world −Z:
+ * moveY +1 → z decreases. Scenes with a different camera heading will
+ * need a heading-mapping option later; that is intentionally out of scope
+ * here (fixed-camera demo).
+ *
  * === Input-buffer pattern (docs/phase-2-core.md, trap #2) ===
  * Jump is an edge (`wasPressedThisFrame`) read in `update()` — the frame
  * phase — and only a pending flag; `fixedUpdate` consumes the flag. This
@@ -92,7 +101,9 @@ export class PlayerController implements System {
       az /= length;
     }
     this.x += ax * this.speed * fixedDt;
-    this.z += az * this.speed * fixedDt;
+    // moveY is screen-forward: with the default camera on +Z looking at the
+    // origin, "away from the camera" is world −Z — hence the minus sign.
+    this.z -= az * this.speed * fixedDt;
 
     if (this.jumpRequested) {
       this.jumpRequested = false;

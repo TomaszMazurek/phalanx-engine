@@ -114,6 +114,7 @@ export class GameplayScene extends Scene {
       0.1,
       100,
     );
+    // On +Z looking at the origin: screen-forward (W, moveY +1) = world −Z — PlayerController's axis convention.
     this.camera.position.set(0, 6, 10);
     this.camera.lookAt(0, 0.5, 0);
 
