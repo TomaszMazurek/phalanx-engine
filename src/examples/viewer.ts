@@ -1,4 +1,5 @@
 import { fetchManifest } from '../assets/manifest';
+import { AssetManager } from '../assets/AssetManager';
 import { Engine } from '../core/Engine';
 import { DevPanel } from '../editor/DevPanel';
 import { LoadingOverlay } from '../editor/LoadingOverlay';
@@ -27,7 +28,9 @@ async function boot(): Promise<void> {
     onProgress: (ratio) => overlay.setProgress(ratio),
   });
 
-  const viewer = new MaterialViewer(assets);
+  // Model shapes (model:<name>, wave C3) load through their own cache; the
+  // demo glTF streams lazily on first pick — nothing extra to preload here.
+  const viewer = new MaterialViewer(assets, new AssetManager());
   const cameraRig = new CameraRig(render);
   render.setRenderOutput(viewer.scene, cameraRig.camera);
 

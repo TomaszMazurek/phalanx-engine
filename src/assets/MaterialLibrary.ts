@@ -22,6 +22,11 @@ export interface DeserializedMaterial {
  * nesting level), so exports are deterministic and diff-friendly. The
  * content is written as-is: serialize does not validate or fill defaults —
  * normalize first for stable round-trips. Unset map slots are omitted.
+ *
+ * Map slots are rebuilt canonically: only the schema's slot fields (source
+ * + the slot's extra) are emitted, and deserialize (via normalize) drops
+ * unknown nested keys inside a slot the same way — a slot never carries
+ * anything the schema does not know about (wave-A decision).
  */
 export function serializeMaterial(def: MaterialDefinition): string {
   return JSON.stringify({

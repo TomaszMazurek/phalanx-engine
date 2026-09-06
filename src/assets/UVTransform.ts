@@ -63,6 +63,10 @@ export type Matrix3Tuple = readonly [
  * to Matrix3.setUvTransform(offset.x, offset.y, repeat.x, repeat.y, rotation,
  * center.x, center.y) (three stores its Matrix3 column-major internally; the
  * ROW-major flat tuple is the same matrix, laid out the way it multiplies).
+ *
+ * Loading this tuple into a THREE.Matrix3: use `matrix.set(...tuple)` (row-major
+ * arguments) — NEVER `matrix.fromArray(tuple)`, which consumes column-major
+ * and silently transposes the transform for any rotation ≠ 0.
  */
 export function composeUVMatrix(uv: MatUv): Matrix3Tuple {
   const c = Math.cos(uv.rotation);

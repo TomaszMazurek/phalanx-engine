@@ -1,13 +1,20 @@
 import * as THREE from 'three';
+import type { AssetManager } from '../assets/AssetManager';
 import type { System } from '../core/System';
 import { Interpolated } from '../core/Interpolated';
 import type { LoadedAssets, TextureSet } from '../render/TextureLibrary';
-import { MeshFactory } from '../render/MeshFactory';
-import {
-  createPhongMaterial,
-  createStandardMaterial,
-} from '../render/MaterialPresets';
+import { isModelId, loadModelShape, MeshFactory } from '../render/MeshFactory';
+import { createPhongMaterial, createStandardMaterial } from '../render/MaterialPresets';
 import { LightingRig } from '../render/LightingRig';
+
+/** Which of the two side-by-side slots; picks the preset material family. */
+type SlotKind = 'phong' | 'standard';
+
+/**
+ * Slot target radius: primitives are built at Sphere scale (radius 120),
+ * and the camera frames that — models are normalized to fit the same slot.
+ */
+const PRIMITIVE_SLOT_RADIUS = 120;
 
 /**
  * MaterialViewer — the Phase 1 example scene (task 8).
@@ -20,6 +27,15 @@ import { LightingRig } from '../render/LightingRig';
  * Phase 2 demo of the fixed-timestep pipeline (docs/phase-2-core.md, task 1):
  * rotation advances in `fixedUpdate` at a constant 60 Hz, and `update` renders
  * the interpolated in-between state — the pattern wave D scenes build on.
+ *
+ * Wave C3 (docs/phase-3-materials.md): `shape` also accepts `model:<name>`
+ * ids (MeshFactory namespace — appears in the DevPanel dropdown via
+ * `MeshFactory.list()`). A model id swaps the two primitive meshes for two
+ * clones of the loaded glTF scene (one Phong, one Standard) carrying the
+ * SAME preset materials as primitives — the MaterialCompiler rewiring is
+ * wave E. setShape stays synchronous for primitives; model ids resolve
+ * asynchronously behind the same sync API with last-write-wins semantics
+ * (see setShape). Visual acceptance of the model path is wave E (manual).
  */
 export interface ViewerParams {
   speed: number;
@@ -55,16 +71,28 @@ export class MaterialViewer implements System {
   };
 
   private readonly assets: LoadedAssets;
+  /**
+   * Cache for `model:<name>` shapes. Optional: without it the viewer serves
+   * primitives only and setShape rejects model ids explicitly. The loaded
+   * glTF (and its geometries/materials) is cache-owned — never disposed here.
+   */
+  private readonly models: AssetManager | null;
   private readonly lighting: LightingRig;
-  private meshPhong: THREE.Mesh | null = null;
-  private meshStandard: THREE.Mesh | null = null;
+  /** Current display roots — primitive THREE.Mesh or a loaded model clone. */
+  private meshPhong: THREE.Object3D | null = null;
+  private meshStandard: THREE.Object3D | null = null;
+
+  /** Bumped by every setShape; an in-flight model load applies only while
+   * its epoch is still current (last-write-wins — see setShape). */
+  private shapeEpoch = 0;
 
   /** Simulation rotation, advanced in fixedUpdate; both meshes share it. */
   private readonly spinX = new Interpolated();
   private readonly spinY = new Interpolated();
 
-  constructor(assets: LoadedAssets) {
+  constructor(assets: LoadedAssets, models?: AssetManager | null) {
     this.assets = assets;
+    this.models = models ?? null;
     this.scene.background = assets.skyboxes.get(this.params.skybox) ?? null;
     this.lighting = new LightingRig(this.scene);
   }
@@ -103,17 +131,35 @@ export class MaterialViewer implements System {
     }
   }
 
+  /**
+   * Switch the displayed shape. Synchronous for primitives (the Phase 1
+   * fire-and-forget API is preserved). For `model:<name>` ids the geometry
+   * needs a fetch, so the swap completes ASYNC — DevPanel's onChange can
+   * stay fire-and-forget.
+   *
+   * Concurrency — last-write-wins: every call bumps `shapeEpoch`. When a
+   * model load settles it applies ONLY if no newer setShape happened; a
+   * primitive picked while a model loads therefore wins, and two rapid
+   * model picks load both but apply only the last.
+   */
   setShape(shape: string): void {
-    this.params.shape = shape;
-    const side = MeshFactory.sideOf(shape);
-    for (const mesh of [this.meshPhong, this.meshStandard]) {
-      if (!mesh) continue;
-      mesh.geometry.dispose();
-      mesh.geometry = MeshFactory.create(shape);
-      const material = this.materialOf(mesh);
-      material.side = side;
-      material.needsUpdate = true;
+    const models = this.models;
+    if (isModelId(shape)) {
+      if (!models) {
+        throw new Error(
+          'MaterialViewer: model shapes need an AssetManager — pass one to the constructor',
+        );
+      }
+      this.params.shape = shape;
+      this.shapeEpoch += 1;
+      void this.swapInModel(shape, models, this.shapeEpoch).catch(
+        (error: unknown) => console.error('[viewer] model load failed:', error),
+      );
+      return;
     }
+    this.params.shape = shape;
+    this.shapeEpoch += 1;
+    this.applyPrimitiveShape(shape);
   }
 
   setTexture(textureId: string): void {
@@ -136,33 +182,40 @@ export class MaterialViewer implements System {
 
   setShininess(value: number): void {
     this.params.shininess = value;
-    if (this.meshPhong?.material instanceof THREE.MeshPhongMaterial) {
-      this.meshPhong.material.shininess = value;
+    for (const material of this.materialsOf(this.meshPhong)) {
+      if (material instanceof THREE.MeshPhongMaterial) {
+        material.shininess = value;
+      }
     }
   }
 
   setRoughness(value: number): void {
     this.params.roughness = value;
-    if (this.meshStandard?.material instanceof THREE.MeshStandardMaterial) {
-      this.meshStandard.material.roughness = value;
+    for (const material of this.materialsOf(this.meshStandard)) {
+      if (material instanceof THREE.MeshStandardMaterial) {
+        material.roughness = value;
+      }
     }
   }
 
   setMetalness(value: number): void {
     this.params.metalness = value;
-    if (this.meshStandard?.material instanceof THREE.MeshStandardMaterial) {
-      this.meshStandard.material.metalness = value;
+    for (const material of this.materialsOf(this.meshStandard)) {
+      if (material instanceof THREE.MeshStandardMaterial) {
+        material.metalness = value;
+      }
     }
   }
 
   setRepeat(u: number, v: number): void {
     this.params.repeatU = u;
     this.params.repeatV = v;
-    for (const mesh of [this.meshPhong, this.meshStandard]) {
-      if (!mesh?.material) continue;
-      const material = mesh.material as THREE.MeshStandardMaterial;
-      for (const slot of ['map', 'bumpMap', 'normalMap', 'aoMap', 'roughnessMap'] as const) {
-        material[slot]?.repeat.set(u, v);
+    for (const [root] of this.slots()) {
+      for (const material of this.materialsOf(root)) {
+        const standard = material as THREE.MeshStandardMaterial;
+        for (const slot of ['map', 'bumpMap', 'normalMap', 'aoMap', 'roughnessMap'] as const) {
+          standard[slot]?.repeat.set(u, v);
+        }
       }
     }
   }
@@ -187,26 +240,147 @@ export class MaterialViewer implements System {
     return mesh;
   }
 
+  /** The two display roots with the preset family each one carries. */
+  private slots(): Array<[THREE.Object3D | null, SlotKind]> {
+    return [
+      [this.meshPhong, 'phong'],
+      [this.meshStandard, 'standard'],
+    ];
+  }
+
+  /** Sync primitive swap — the original setShape body. Primitive→primitive
+   * keeps its in-place geometry swap (materials persist across shapes); if
+   * a model clone currently occupies the slots, the primitive pair is
+   * rebuilt fresh instead (their materials don't survive detachSlots). */
+  private applyPrimitiveShape(shape: string): void {
+    if (this.meshPhong !== null && !(this.meshPhong instanceof THREE.Mesh)) {
+      this.detachSlots();
+      this.meshPhong = this.createMesh(200);
+      this.meshStandard = this.createMesh(-200);
+      // Fresh materials don't carry the configured tiling — restore it.
+      this.setRepeat(this.params.repeatU, this.params.repeatV);
+      return;
+    }
+    const side = MeshFactory.sideOf(shape);
+    for (const mesh of [this.meshPhong, this.meshStandard]) {
+      if (!(mesh instanceof THREE.Mesh)) continue;
+      mesh.geometry.dispose();
+      mesh.geometry = MeshFactory.create(shape);
+      const material = this.materialOf(mesh);
+      material.side = side;
+      material.needsUpdate = true;
+    }
+  }
+
+  /** Async half of setShape for model ids. Two independent clones come from
+   * ONE cached load: the AssetManager dedups the concurrent loadModelShape
+   * calls and each call clones — the two slots must not share a transform
+   * (each side spins independently). */
+  private async swapInModel(id: string, models: AssetManager, epoch: number): Promise<void> {
+    const [phong, standard] = await Promise.all([
+      loadModelShape(id, models),
+      loadModelShape(id, models),
+    ]);
+    // Last-write-wins guard: any setShape since we started (primitive OR
+    // model) bumped the epoch — this load is stale and never reaches the
+    // scene. The clones are garbage-collected; nothing cache-owned leaks.
+    if (epoch !== this.shapeEpoch) {
+      return;
+    }
+    this.detachSlots();
+    this.meshPhong = this.placeModel(phong, 200, 'phong');
+    this.meshStandard = this.placeModel(standard, -200, 'standard');
+    this.setRepeat(this.params.repeatU, this.params.repeatV);
+  }
+
+  /** Put one model clone into a viewer slot: scaled to primitive slot size,
+   * every glTF material REPLACED by the current preset — by reference, NOT
+   * disposed: the originals are shared with the AssetManager cache.
+   * Runs before the clone enters the slot, so the slot invariant below
+   * (every attached material is viewer-created) holds from the first frame. */
+  private placeModel(root: THREE.Object3D, x: number, kind: SlotKind): THREE.Object3D {
+    const set = this.currentSet();
+    // Viewer slots are tuned for ~200-unit primitives while glTF authors in
+    // meters — normalize the bounding sphere so any .glb presents like a
+    // primitive (C3 target: "kostka demo + dowolny .glb").
+    const sphere = new THREE.Box3().setFromObject(root).getBoundingSphere(new THREE.Sphere());
+    root.scale.setScalar(sphere.radius > 0 ? PRIMITIVE_SLOT_RADIUS / sphere.radius : 1);
+    const material = this.presetMaterialFor(kind, set);
+    root.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.material = material;
+      }
+    });
+    root.name = `${kind}_${set.id}`;
+    root.position.set(x, 50, 0);
+    this.scene.add(root);
+    return root;
+  }
+
+  /** Remove both slot roots, disposing ONLY viewer-created resources: preset
+   * materials always, primitive geometries too. Model geometries and the
+   * glTF's original materials are shared with the AssetManager cache —
+   * cache policy is no-eviction, so consumers never dispose them. */
+  private detachSlots(): void {
+    for (const [root] of this.slots()) {
+      if (!root) continue;
+      this.scene.remove(root);
+      if (root instanceof THREE.Mesh) {
+        root.geometry.dispose();
+      }
+      for (const material of this.materialsOf(root)) {
+        material.dispose();
+      }
+    }
+    this.meshPhong = null;
+    this.meshStandard = null;
+  }
+
+  /**
+   * Every material on the meshes under `root` (null → []). Slot invariant:
+   * placeModel replaces all glTF materials BEFORE a clone becomes a slot
+   * root, so everything found here is viewer-created and safe to dispose.
+   */
+  private materialsOf(root: THREE.Object3D | null): THREE.Material[] {
+    const found: THREE.Material[] = [];
+    root?.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const material = child.material;
+        if (Array.isArray(material)) {
+          found.push(...material);
+        } else {
+          found.push(material);
+        }
+      }
+    });
+    return found;
+  }
+
+  private presetMaterialFor(kind: SlotKind, set: TextureSet): THREE.Material {
+    return kind === 'phong'
+      ? createPhongMaterial(set, this.params.normalMap, this.params.shininess)
+      : createStandardMaterial(
+          set,
+          this.params.normalMap,
+          this.params.roughness,
+          this.params.metalness,
+        );
+  }
+
   private rebuildMaterials(): void {
     const set = this.currentSet();
-    if (this.meshPhong) {
-      this.materialOf(this.meshPhong).dispose();
-      this.meshPhong.material = createPhongMaterial(
-        set,
-        this.params.normalMap,
-        this.params.shininess,
-      );
-      this.meshPhong.name = `phong_${set.id}`;
-    }
-    if (this.meshStandard) {
-      this.materialOf(this.meshStandard).dispose();
-      this.meshStandard.material = createStandardMaterial(
-        set,
-        this.params.normalMap,
-        this.params.roughness,
-        this.params.metalness,
-      );
-      this.meshStandard.name = `standard_${set.id}`;
+    for (const [root, kind] of this.slots()) {
+      if (!root) continue;
+      for (const old of this.materialsOf(root)) {
+        old.dispose();
+      }
+      const material = this.presetMaterialFor(kind, set);
+      root.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.material = material;
+        }
+      });
+      root.name = `${kind}_${set.id}`;
     }
     this.setRepeat(this.params.repeatU, this.params.repeatV);
   }

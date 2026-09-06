@@ -26,6 +26,22 @@ function fullDefinition(): MaterialDefinition {
   };
 }
 
+/** Every number anywhere in a normalized def — the finite-invariant walker. */
+function collectNumbers(value: unknown, out: number[] = []): number[] {
+  if (typeof value === 'number') {
+    out.push(value);
+  } else if (Array.isArray(value)) {
+    for (const entry of value) {
+      collectNumbers(entry, out);
+    }
+  } else if (typeof value === 'object' && value !== null) {
+    for (const entry of Object.values(value as Record<string, unknown>)) {
+      collectNumbers(entry, out);
+    }
+  }
+  return out;
+}
+
 describe('MaterialDefinition', () => {
   describe('DEFAULT_MATERIAL_DEFINITION()', () => {
     it('returns the documented baseline: white, rough, non-metal, identity UVs', () => {
@@ -230,6 +246,22 @@ describe('MaterialDefinition', () => {
       expect(Object.isFrozen(def.maps)).toBe(true);
     });
 
+    it('freezes a FULL definition deeply: every slot and its source too', () => {
+      const def = normalize(fullDefinition());
+      expect(Object.isFrozen(def)).toBe(true);
+      expect(Object.isFrozen(def.params)).toBe(true);
+      expect(Object.isFrozen(def.uv)).toBe(true);
+      expect(Object.isFrozen(def.uv.repeat)).toBe(true);
+      expect(Object.isFrozen(def.uv.offset)).toBe(true);
+      expect(Object.isFrozen(def.uv.center)).toBe(true);
+      expect(Object.isFrozen(def.maps)).toBe(true);
+      for (const slot of Object.values(def.maps)) {
+        expect(slot).toBeDefined();
+        expect(Object.isFrozen(slot)).toBe(true);
+        expect(Object.isFrozen(slot!.source)).toBe(true);
+      }
+    });
+
     it('always yields a definition that passes validate(), even from garbage', () => {
       const garbage: unknown[] = [
         null,
@@ -240,9 +272,20 @@ describe('MaterialDefinition', () => {
         [fullDefinition()],
         { version: 'one', id: 7, shading: 'lambert', color: 'blue' },
         { params: 'nope', uv: 3, maps: true },
+        // NaN/Infinity must fall back to defaults — never pass through as numbers.
+        {
+          version: 1,
+          id: 'm',
+          shading: 'standard',
+          color: 0,
+          params: { roughness: Number.NaN, metalness: Number.POSITIVE_INFINITY },
+          uv: { repeat: [Number.NaN, 1], rotation: Number.POSITIVE_INFINITY },
+        },
       ];
       for (const input of garbage) {
-        expect(validate(normalize(input))).toEqual({ valid: true, errors: [] });
+        const def = normalize(input);
+        expect(validate(def)).toEqual({ valid: true, errors: [] });
+        expect(collectNumbers(def).every(Number.isFinite)).toBe(true);
       }
     });
 
