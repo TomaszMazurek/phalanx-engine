@@ -145,6 +145,14 @@ znika (zależności z npm).
 
 **Kamień milowy:** można stworzyć materiał w panelu i zapisać/odczytać go z JSON.
 
+## Gry na Phalanx (silnik rośnie przez gry)
+
+**Gra 1 — Arena Defense Shooter** (koncept roboczy): [games/GAME-1-arena-defense.md](./games/GAME-1-arena-defense.md)
+— fast sci-fi arena shooter + TD + CTF; core loop: move → shoot → build → react → chase → recover/capture.
+V1 celowo prymitywna; to ona wyznaca scope Faz 4–6 (fizyka odkładana, UI/audio wciągane do przodu).
+
+---
+
 ## Faza 4 — Fizyka i interakcja (~1 tydzień)
 
 - **rapier.js** — kolizje, RigidBody, character controller.
