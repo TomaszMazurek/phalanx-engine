@@ -1,14 +1,28 @@
-# engine — browser game engine on three.js
+# Phalanx — browser game engine on three.js
 
-Material-editor-turned-game-engine. Master plan: [`docs/ENGINE_PLAN.md`](docs/ENGINE_PLAN.md),
-Phase 1 plan: [`docs/phase-1-foundation.md`](docs/phase-1-foundation.md).
+Phalanx started in 2019 as a student dream of building a game engine — one README,
+four commits, then silence. In 2026 it was revived as a browser game engine on
+three.js. The original 2019 repository lives on in the [`legacy-2019`](../../tree/legacy-2019)
+branch.
+
+Master plan: [`docs/ENGINE_PLAN.md`](docs/ENGINE_PLAN.md),
+Phase 1 plan: [`docs/phase-1-foundation.md`](docs/phase-1-foundation.md),
+Phase 2 plan: [`docs/phase-2-core.md`](docs/phase-2-core.md).
+
+## Demo
+
+**Live demo:** _URL to be added after deployment (Wave E)_
+
+Locally: `npm run dev` → http://localhost:5173 (Phase 2 engine demo: menu → gameplay),
+http://localhost:5173/viewer.html (Phase 1 material viewer).
 
 ## Run
 
 ```bash
 npm install
 npm run dev      # dev server (Vite)
-npm run build    # typecheck (tsc -b) + production build → dist/
+npm run build    # typecheck (tsc -b) + production build → dist/ (two pages: index.html, viewer.html)
+npm run test     # vitest (unit tests)
 npm run lint     # ESLint
 npm run format   # Prettier
 ```

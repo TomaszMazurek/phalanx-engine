@@ -1,5 +1,5 @@
 {
-  "name": "engine",
+  "name": "phalanx-engine",
   "description": "Browser game engine on three.js — Phase 1 (see docs/ENGINE_PLAN.md)",
   "private": true,
   "version": "0.1.0",

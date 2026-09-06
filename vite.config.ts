@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  // Relative base so dist/ works under ANY subpath (static hosting without a
+  // dedicated domain) — see docs/phase-2-core.md, uwaga #10.
+  base: './',
   // public/ (textures, manifest) is served from the root URL by default.
   resolve: {
     alias: {
