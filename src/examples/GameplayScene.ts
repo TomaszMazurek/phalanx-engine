@@ -17,10 +17,13 @@ import type { GameEvents } from './GameEvents';
  * === Structural dependency types (headless testability) ===
  * `loadGLTF` returns three's `GLTF`; the scene only consumes
  * `result.scene.position.set(...)`. Declaring that minimal shape here keeps
- * src/examples/GameplayScene.test.ts three-free: the real `loadGLTF`
- * satisfies `ModelLoader` structurally (GLTF.scene is an Object3D, whose
- * `position.set(x, y, z)` matches exactly), and tests inject deferred fakes
- * — zero casts on both sides.
+ * src/examples/GameplayScene.test.ts three-free in its preload paths: the
+ * real `loadGLTF` satisfies `ModelLoader` structurally (GLTF.scene is an
+ * Object3D, whose `position.set(x, y, z)` matches exactly), and tests
+ * inject deferred fakes — zero casts in the loading wiring. Exactly ONE
+ * cast remains, at the three boundary in enter(): `Scene.add` needs an
+ * Object3D while the static type here is the ModelNode slice (justified
+ * at the cast site).
  */
 
 /** The minimal model node this scene touches (structural slice of Object3D). */
@@ -39,9 +42,23 @@ export type ModelLoader = (
   onProgress?: (ratio: number) => void,
 ) => Promise<LoadedModel>;
 
-/** Structural slice of RenderSystem — only setRenderOutput is used. */
+/**
+ * Structural slice of RenderSystem — the output lifecycle (set/clear) and
+ * the resize subscription this scene drives. RenderSystem satisfies it
+ * structurally.
+ */
 export interface RenderOutputTarget {
   setRenderOutput(scene: THREE.Scene, camera: THREE.Camera): void;
+
+  /**
+   * Stop rendering the current output: frames draw NOTHING until the next
+   * setRenderOutput — not the frozen last frame (phase-2 retro nit: the
+   * last gameplay frame kept showing behind the menu overlay).
+   */
+  clearRenderOutput(): void;
+
+  /** Subscribe to viewport resizes; the returned function unsubscribes. */
+  onResize(handler: () => void): () => void;
 }
 
 export interface GameplayDeps {
@@ -63,6 +80,9 @@ export class GameplayScene extends Scene {
   /** three content — built in enter(), never before (preload stays headless). */
   private camera: THREE.PerspectiveCamera | null = null;
   private grid: THREE.GridHelper | null = null;
+
+  /** Unsubscribe for this scene's render.onResize subscription (see enter). */
+  private unsubscribeResize: (() => void) | null = null;
 
   constructor(deps: GameplayDeps) {
     super();
@@ -126,17 +146,32 @@ export class GameplayScene extends Scene {
     this.grid = new THREE.GridHelper(24, 24, 0x37474f, 0x21262d);
     scene.add(this.grid);
 
+    // The ONE acknowledged cast (class doc): ModelNode is a structural
+    // slice, not an Object3D — but the runtime value always IS one
+    // (GLTF.scene), so widening it for Scene.add is sound.
     scene.add(this.model.scene as THREE.Object3D);
 
     this.deps.render.setRenderOutput(scene, this.camera);
+
+    // Camera aspect must follow viewport resizes (CameraRig does the same
+    // for the viewer). The subscription is scene-owned, NOT app-owned:
+    // RenderSystem's registry outlives this single-use scene, so exit()
+    // unsubscribes (phase-2 retro nit: fixed aspect + leaky listener).
+    this.unsubscribeResize = this.deps.render.onResize(() => {
+      if (!this.camera) return; // exit already ran — nothing left to update
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+    });
   }
 
   override exit(): void {
-    // DECISION (documented, Wave F nit): RenderSystem has no clear/clearOutput
-    // API — the last set output keeps rendering (frozen) behind the next
-    // scene's DOM. The next scene with 3D content re-points the output in its
-    // enter(). Adding RenderOutputTarget.clear() is the clean fix; deferred
-    // to avoid widening RenderSystem in this slice.
+    // Stopped being active: stop feeding the renderer. clearRenderOutput
+    // makes the following frames EMPTY — before this API the frozen last
+    // frame kept rendering behind the menu overlay. The resize handler
+    // dies with the scene it was created for.
+    this.unsubscribeResize?.();
+    this.unsubscribeResize = null;
+    this.deps.render.clearRenderOutput();
   }
 
   override dispose(): void {
@@ -192,11 +227,17 @@ class MeshSyncSystem implements System {
     }
 
     // Interpolated: the player's own cached read (same alpha, same frame).
-    // Raw: read(1) = the current fixed-step state — no smoothing, on purpose.
-    const p = this.interpolationOn
-      ? this.player.lastRenderedPosition
-      : this.player.interpolatedPosition(1);
-    this.model.position.set(p.x, p.y, p.z);
+    // Raw: the latest fixed-step state straight from Interpolated.value —
+    // read(alpha)'s domain is [0, 1), so the previous read(1) shortcut was
+    // off-contract and allocated a throwaway object every frame
+    // (phase-2 retro nit).
+    if (this.interpolationOn) {
+      const p = this.player.lastRenderedPosition;
+      this.model.position.set(p.x, p.y, p.z);
+    } else {
+      const raw = this.player.position;
+      this.model.position.set(raw.x.value, raw.y.value, raw.z.value);
+    }
   }
 }
 

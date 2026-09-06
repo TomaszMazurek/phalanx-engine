@@ -49,12 +49,15 @@ import type { AxisDefinition, Binding, BindingsConfig } from './Bindings';
  *
  * Out of scope (documented, not implemented): wheel, pointer lock,
  * touch/multi-touch — they arrive with a real use case (Phase 4+).
- * `blur` releases all held keyboard/mouse state (no stuck keys after alt-tab).
+ * `blur` (and gamepad disconnect) releases held state AND records released
+ * edges — no stuck keys after alt-tab, and no silent held→released drops
+ * for consumers polling `wasReleasedThisFrame`.
  */
 export class InputSystem implements System {
   readonly name = 'input';
 
-  /** Gamepad stick deadzone: below this an axis reads as 0. */
+  /** Gamepad stick deadzone: values at/below read as 0; values beyond are
+   * rescaled from [DEADZONE, 1] onto [0, 1] with the sign preserved. */
   static readonly DEADZONE = 0.15;
 
   private actions: Record<string, Binding[]> = {};
@@ -91,6 +94,7 @@ export class InputSystem implements System {
     this.domTarget.addEventListener('keyup', this.onKeyUp);
     this.domTarget.addEventListener('mousedown', this.onMouseDown);
     this.domTarget.addEventListener('mouseup', this.onMouseUp);
+    this.domTarget.addEventListener('contextmenu', this.onContextMenu);
     this.domTarget.addEventListener('pointermove', this.onPointerMove);
     window.addEventListener('blur', this.onBlur);
     window.addEventListener('gamepadconnected', this.onGamepadConnected);
@@ -104,6 +108,7 @@ export class InputSystem implements System {
     this.domTarget.removeEventListener('keyup', this.onKeyUp);
     this.domTarget.removeEventListener('mousedown', this.onMouseDown);
     this.domTarget.removeEventListener('mouseup', this.onMouseUp);
+    this.domTarget.removeEventListener('contextmenu', this.onContextMenu);
     this.domTarget.removeEventListener('pointermove', this.onPointerMove);
     window.removeEventListener('blur', this.onBlur);
     window.removeEventListener('gamepadconnected', this.onGamepadConnected);
@@ -186,7 +191,7 @@ export class InputSystem implements System {
     if (definition.gamepad) {
       const raw =
         (this.padAxes[definition.gamepad.index] ?? 0) * definition.gamepad.direction;
-      value += Math.abs(raw) < InputSystem.DEADZONE ? 0 : raw;
+      value += InputSystem.rescaleDeadzone(raw);
     }
     return Math.min(1, Math.max(-1, value));
   }
@@ -248,9 +253,33 @@ export class InputSystem implements System {
     this.pointerY = event.clientY;
   };
 
+  private readonly onContextMenu = (event: Event): void => {
+    // preventDefault on mousedown does NOT suppress the context menu — the
+    // browser fires a separate contextmenu event. Suppress it only when the
+    // event's button (MouseEvent.button, 2 = right) maps to a bound mouse
+    // binding that opted into preventDefault; unbound or opted-out buttons
+    // keep the browser menu.
+    if (!(event instanceof MouseEvent)) return;
+    const bound = this.actionsBoundToMouse(event.button);
+    for (const entry of bound) {
+      if (entry.preventDefault) event.preventDefault();
+    }
+  };
+
   private readonly onBlur = (): void => {
     // Alt-tab / focus loss: release everything held, or keys stay stuck
-    // (keyup never fires for a window that lost focus mid-press).
+    // (keyup never fires for a window that lost focus mid-press). Released
+    // edges are recorded BEFORE clearing, so the held→released transition
+    // stays observable to consumers polling wasReleasedThisFrame after the
+    // blur. Gamepads are not DOM devices — their state survives blur.
+    for (const [action, bindings] of Object.entries(this.actions)) {
+      const keyboardOrMouseHeld = bindings.some(
+        (binding) =>
+          (binding.kind === 'keyboard' && this.heldKeyboard.has(binding.code)) ||
+          (binding.kind === 'mouse' && this.heldMouse.has(binding.button)),
+      );
+      if (keyboardOrMouseHeld) this.releasedEdges.add(action);
+    }
     this.heldKeyboard.clear();
     this.heldMouse.clear();
   };
@@ -263,6 +292,11 @@ export class InputSystem implements System {
   private readonly onGamepadDisconnected = (event: Event): void => {
     if (!(event instanceof GamepadEvent)) return;
     console.info(`[InputSystem] gamepad disconnected: ${event.gamepad.id}`);
+    // The pad is gone: every pad-held action transitions to released — edge
+    // recorded (same contract as blur), not a silent drop.
+    for (const index of this.heldPadButtons) {
+      this.addPadEdge(index, this.releasedEdges);
+    }
     this.heldPadButtons.clear();
     this.padAxes = [];
   };
@@ -306,6 +340,19 @@ export class InputSystem implements System {
       }
     }
     return false;
+  }
+
+  /**
+   * Deadzone with rescaling (no hard cut): magnitudes at/below DEADZONE
+   * read as 0; beyond it the value maps linearly from [DEADZONE, 1] onto
+   * [0, 1] with the sign preserved, so the stick output is continuous.
+   */
+  private static rescaleDeadzone(value: number): number {
+    const magnitude = Math.abs(value);
+    if (magnitude <= InputSystem.DEADZONE) return 0;
+    return (
+      Math.sign(value) * ((magnitude - InputSystem.DEADZONE) / (1 - InputSystem.DEADZONE))
+    );
   }
 
   /**

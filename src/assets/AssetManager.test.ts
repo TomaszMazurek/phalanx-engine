@@ -173,6 +173,57 @@ describe('AssetManager', () => {
     expect(manager.size).toBe(1);
   });
 
+  it('preload over an IN-FLIGHT entry rides the shared promise: no instant ratio 1', async () => {
+    const manager = new AssetManager();
+    const gateA = deferred<string>();
+    const factoryA = vi.fn(gatedFactory(gateA, 0.5));
+    const inFlight = manager.load('a.glb', factoryA);
+
+    const gateB = deferred<string>();
+    const factoryB = vi.fn(gatedFactory(gateB));
+    const ratios: number[] = [];
+    const loading = manager.preload([{ uri: 'a.glb', factory: factoryB }], (ratio) =>
+      ratios.push(ratio),
+    );
+
+    // In-flight ≠ resolved: the entry must NOT be marked complete up front
+    // (that would overstate progress), and the factory must not be re-invoked
+    // — preload wraps the SAME in-flight promise.
+    expect(factoryB).not.toHaveBeenCalled();
+    expect(ratios).not.toContain(1);
+
+    gateA.resolve('asset-a');
+    await expect(loading).resolves.toEqual(['asset-a']);
+    await expect(inFlight).resolves.toBe('asset-a');
+    expect(ratios.at(-1)).toBe(1); // complete exactly when the load resolves
+  });
+
+  it('no progress callback escapes after a preload REJECTS', async () => {
+    const manager = new AssetManager();
+    const gateOk = deferred<string>();
+    const gateBad = deferred<string>();
+    const factoryOk = gatedFactory(gateOk);
+    const factoryBad = gatedFactory(gateBad);
+
+    const ratios: number[] = [];
+    const loading = manager.preload(
+      [
+        { uri: 'ok.glb', factory: factoryOk },
+        { uri: 'bad.glb', factory: factoryBad },
+      ],
+      (ratio) => ratios.push(ratio),
+    );
+
+    gateBad.reject(new Error('corrupt-gltf'));
+    await expect(loading).rejects.toThrow('corrupt-gltf');
+    const reportsAtRejection = ratios.length;
+
+    // The survivor keeps loading, but the (rejected) preload must stay silent.
+    gateOk.resolve('asset-ok');
+    await flushMicrotasks();
+    expect(ratios.length).toBe(reportsAtRejection);
+  });
+
   it('release() during an in-flight load: awaiters still resolve, entry uncached', async () => {
     const manager = new AssetManager();
     const gate = deferred<string>();

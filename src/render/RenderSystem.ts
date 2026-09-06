@@ -34,9 +34,30 @@ export class RenderSystem implements System {
     this.output = { scene, camera };
   }
 
-  /** Register a callback for window resizes (single-listener rule). */
-  onResize(handler: () => void): void {
+  /**
+   * Stop rendering the current output: update() then draws NOTHING (a
+   * cleared frame) until the next setRenderOutput — not the frozen last
+   * frame. Called when the active scene exits and a DOM-only scene (the
+   * menu) takes over (phase-2 retro nit: frozen frame behind the menu).
+   */
+  clearRenderOutput(): void {
+    this.output = null;
+  }
+
+  /**
+   * Register a callback for window resizes (single-listener rule).
+   * Returns the unsubscribe: app-lifetime subscribers (CameraRig) may drop
+   * it, single-use scenes MUST call it on exit or their handler leaks in
+   * this app-lifetime registry.
+   */
+  onResize(handler: () => void): () => void {
     this.resizeHandlers.push(handler);
+    return () => {
+      const index = this.resizeHandlers.indexOf(handler);
+      if (index !== -1) {
+        this.resizeHandlers.splice(index, 1);
+      }
+    };
   }
 
   get maxAnisotropy(): number {
@@ -48,6 +69,8 @@ export class RenderSystem implements System {
   }
 
   update(): void {
+    // No output → nothing to draw: a cleared frame (see clearRenderOutput),
+    // never a render call with nulls.
     if (this.output) {
       this.renderer.render(this.output.scene, this.output.camera);
     }

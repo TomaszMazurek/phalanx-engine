@@ -49,6 +49,16 @@ export class AssetManager {
   private readonly entries = new Map<string, Promise<unknown>>();
 
   /**
+   * URIs whose cached promise has RESOLVED (failures and release/disposeAll
+   * remove them). preload needs the resolved-vs-in-flight distinction: only
+   * a resolved entry may count as instantly complete — an in-flight entry
+   * must stay tracked until the shared promise settles, or the loading bar
+   * would jump early. Promises expose no synchronous settled state, hence
+   * this parallel set.
+   */
+  private readonly resolved = new Set<string>();
+
+  /**
    * Load an asset, deduplicating concurrent requests for the same URI
    * (the second caller while loading receives the SAME promise). On failure
    * the cache entry is dropped, so a retry re-invokes the factory.
@@ -64,11 +74,17 @@ export class AssetManager {
     }
     const promise = factory(uri, () => {
       /* progress forwarded by adapters/preload, not by bare load */
-    }).catch((error: unknown) => {
-      // Failed entries must not poison the cache — retry gets a fresh load.
-      this.entries.delete(uri);
-      throw error;
-    });
+    })
+      .then((value) => {
+        this.resolved.add(uri);
+        return value;
+      })
+      .catch((error: unknown) => {
+        // Failed entries must not poison the cache — retry gets a fresh load.
+        this.entries.delete(uri);
+        this.resolved.delete(uri);
+        throw error;
+      });
     this.entries.set(uri, promise);
     return promise;
   }
@@ -76,11 +92,15 @@ export class AssetManager {
   /**
    * Load many assets with one aggregated [0..1] progress report
    * (equal weight per entry — simple, deterministic, good enough for a
-   * loading bar). Resolved/cached entries count as complete immediately.
+   * loading bar). Already-RESOLVED cache entries count as complete
+   * immediately; IN-FLIGHT entries keep their slot at 0 until the shared
+   * promise settles (no premature ratio 1).
    *
    * Fail-fast semantics (Promise.all): on the first rejection the returned
    * promise rejects, but the other loads keep running and their results
    * stay cached; a failed URI is dropped from the cache and can be retried.
+   * Progress callbacks stop at settlement: once this promise has rejected
+   * or resolved, no further onOverallProgress escapes.
    */
   async preload<T>(
     entries: PreloadEntry<T>[],
@@ -90,8 +110,12 @@ export class AssetManager {
       onOverallProgress(1);
       return [];
     }
+    let settled = false;
     const ratios = entries.map(() => 0);
     const report = (): void => {
+      if (settled) {
+        return;
+      }
       const sum = ratios.reduce((acc, value) => acc + value, 0);
       onOverallProgress(sum / entries.length);
     };
@@ -102,7 +126,7 @@ export class AssetManager {
         ratios[index] = 1;
         report();
       };
-      if (this.entries.has(entry.uri)) {
+      if (this.resolved.has(entry.uri)) {
         markComplete();
       }
       const wrappedFactory: AssetFactory<T> = (_uri, _onProgress) =>
@@ -116,12 +140,15 @@ export class AssetManager {
         return value;
       });
     });
-    return Promise.all(loads);
+    return Promise.all(loads).finally(() => {
+      settled = true;
+    });
   }
 
   /** Drop a single cache slot. In-flight loads complete but are uncached. */
   release(uri: string): void {
     this.entries.delete(uri);
+    this.resolved.delete(uri);
   }
 
   /**
@@ -130,6 +157,7 @@ export class AssetManager {
    */
   disposeAll(): void {
     this.entries.clear();
+    this.resolved.clear();
   }
 
   /** Number of cached (in-flight or resolved) assets. */

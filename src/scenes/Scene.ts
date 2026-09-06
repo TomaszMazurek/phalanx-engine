@@ -42,8 +42,9 @@ export type SceneLifecycleEvents = {
  * above on it and scenes subscribe/publish their own (through the app's
  * extended, wider-typed view). `input` is the shared InputSystem — register
  * it LAST among engine systems (see its class doc for the edge-ordering
- * contract). AssetManager joins this context in Wave C; until then scenes
- * receive already-loaded resources via their constructors.
+ * contract). The context stays {events, input}: scenes receive assets via
+ * constructor DI instead (e.g. GameplayDeps carries the shared AssetManager;
+ * Phase 3 delivers materials the same way) — they never come through here.
  */
 export interface SceneContext {
   readonly events: EventBus<SceneLifecycleEvents>;
