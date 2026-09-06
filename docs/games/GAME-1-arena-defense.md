@@ -69,12 +69,7 @@ Nie RTS. Nie looter shooter. Nie gra-usługa. Nie „indie AAA".
 Wniosek strategiczny: Gra 1 **przemeblowuje Fazę 4+** — pełna fizyka (Rapier)
 schodzi na "gdy gra jej wymaga", UI+audio wjeżdżają do przodu. Scope faz dogada gra.
 
-## Otwarte pytania projektowe (do rozstrzygnięcia przed prototypem)
+## Otwarte pytania projektowe — ROZSTRZYGNIĘTE (plan wykonawczy: [GAME-1-plan.md](./GAME-1-plan.md))
 
-1. Asymetria obrony: czy AI przeciwnika BUDUJE wieże w v1, czy ma stałą obronę?
-   (rekomendacja: v1 = stała prosta obrona, AI buduje od v2)
-2. Ekonomia v1: flat income na falę + bonus za kill? (rekomendacja: tak, zero menu)
-3. Carrier: jak bardzo zwolniony, co gdy dojdzie do bazy — koniec rundy czy punkt?
-   (v1: koniec rundy, wynik 1:0)
-4. Mapa: pełna symetria lustrzana (fair) czy lekka asymetria (charakter)?
-   (v1: lustrzana)
+1. AI przeciwnika **nie buduje** w v1 (stała obrona) · 2. ekonomia **flat + kill bonus**, zero menu ·
+3. doniesiony rdzeń = **koniec rundy**, restart R · 4. mapa **w pełni symetryczna rotacyjnie**.

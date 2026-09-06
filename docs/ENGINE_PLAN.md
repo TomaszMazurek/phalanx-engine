@@ -192,6 +192,9 @@ znika (zależności z npm).
 **Gra 1 — Arena Defense Shooter** (koncept roboczy): [games/GAME-1-arena-defense.md](./games/GAME-1-arena-defense.md)
 — fast sci-fi arena shooter + TD + CTF; core loop: move → shoot → build → react → chase → recover/capture.
 V1 celowo prymitywna; to ona wyznaca scope Faz 4–6 (fizyka odkładana, UI/audio wciągane do przodu).
+**Plan wykonawczy (AKTYWNY):** [games/GAME-1-plan.md](./games/GAME-1-plan.md) — sprinty S0–S3
+(S0: 30 sekund frajdy → S1: TD → S2: CTF/pościg → S3: wernisaż). Od tagu `phase-3`
+kierownicem projektu jest GRA, nie lista faz silnika.
 
 ---
 
