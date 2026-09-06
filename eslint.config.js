@@ -21,12 +21,14 @@ export default tseslint.config(
     },
   },
   {
-    // Phase 2 boundary (docs/phase-2-core.md, note 9): the engine core and the
-    // scene layer must stay renderer-agnostic — no three.js imports outside
-    // the render/ and assets/ adapter layers. src/scenes/ does not exist yet;
-    // a flat-config glob matching no files is simply inert, so it is safe to
-    // declare it now (rule becomes active the day the directory appears).
-    files: ['src/core/**', 'src/scenes/**'],
+    // Phase 2 boundary (docs/phase-2-core.md, note 9): the engine core, the
+    // scene layer and the generic asset cache must stay renderer-agnostic —
+    // no three.js imports outside the render/ adapter layer. Three-facing
+    // loaders (e.g. GLTFAdapter) live in render/; assets/ holds the pure
+    // TS cache + manifest types. src/scenes/ files exist since Wave B; a
+    // flat-config glob matching no files is simply inert, so extending the
+    // glob ahead of a directory is safe.
+    files: ['src/core/**', 'src/scenes/**', 'src/assets/**'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -34,7 +36,7 @@ export default tseslint.config(
           patterns: [
             {
               group: ['three', 'three/**'],
-              message: 'src/core and src/scenes must not import three.js directly — go through the render/ (or assets/) adapter layer (plan decision #5, phase-2-core.md note 9).',
+              message: 'src/core, src/scenes and src/assets must not import three.js directly — go through the render/ adapter layer (plan decision #5, phase-2-core.md note 9).',
             },
           ],
         },
