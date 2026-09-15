@@ -1,6 +1,7 @@
 import type * as THREE from 'three';
 import type { IEditorContext, EditorContextUpdateParams } from './IEditorContext';
 import type { ViewportController } from '../app/ViewportController';
+import { LightmapBakingService } from '../../render/pathtracer';
 
 export class LightingContext implements IEditorContext {
   readonly id = 'lighting' as const;
@@ -9,6 +10,7 @@ export class LightingContext implements IEditorContext {
 
   private activeObject: THREE.Object3D | null = null;
   private viewport?: ViewportController;
+  private readonly baker = new LightmapBakingService();
 
   get selected(): THREE.Object3D | null {
     return this.activeObject;
@@ -86,15 +88,38 @@ export class LightingContext implements IEditorContext {
     container.querySelectorAll<HTMLButtonElement>('button[data-bake]').forEach((btn) => {
       btn.onclick = async () => {
         const bakeType = btn.dataset.bake as 'ao' | 'gi';
+        if (!this.viewport || !this.viewport.scene) {
+          console.warn('[LightingContext] Cannot bake: no active viewport scene');
+          return;
+        }
+
         const originalText = btn.textContent;
         btn.disabled = true;
-        btn.textContent = '⏳ Baking...';
         try {
-          // Log bake trigger
           console.log(`[LightingContext] Initiating ${bakeType.toUpperCase()} bake via PathTracer...`);
-        } finally {
-          btn.disabled = false;
-          btn.textContent = originalText;
+          const result = await this.baker.bakeScene(this.viewport.scene, {
+            type: bakeType === 'gi' ? 'irradiance' : 'ao',
+            resolution: 256,
+            samples: bakeType === 'gi' ? 64 : 32,
+            onProgress: (_step, progress) => {
+              btn.textContent = `⏳ ${Math.round(progress * 100)}%`;
+            }
+          });
+          btn.textContent = `✅ Baked ${result.meshCount} meshes (${result.durationMs}ms)`;
+          console.log(
+            `[LightingContext] Bake successful: ${result.meshCount} meshes, ${result.triangleCount} triangles in ${result.durationMs}ms`
+          );
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }, 3000);
+        } catch (err: unknown) {
+          console.error('[LightingContext] Bake failed:', err);
+          btn.textContent = '❌ Bake Failed';
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }, 3000);
         }
       };
     });

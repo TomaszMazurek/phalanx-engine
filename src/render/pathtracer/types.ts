@@ -95,14 +95,14 @@ export interface NativePathTracerExports {
     maxBounces: number,
     normalBias: number,
     dilationPixels: number,
-    seedLo: number, seedHi: number,
+    seed: number,
     outRgbaPtr: number
   ): number;
   _pt_render_camera(
     width: number, height: number,
     samples: number,
     maxDepth: number,
-    seedLo: number, seedHi: number,
+    seed: number,
     outRgbaPtr: number
   ): number;
 

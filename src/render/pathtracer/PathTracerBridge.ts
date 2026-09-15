@@ -103,7 +103,7 @@ export class PathTracerBridge {
       maxBounces,
       normalBias,
       dilation,
-      seed, 0,
+      seed,
       outPtr
     );
 
@@ -151,7 +151,7 @@ export class PathTracerBridge {
       width, height,
       samples,
       maxDepth,
-      seed, 0,
+      seed,
       outPtr
     );
 
