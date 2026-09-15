@@ -85,6 +85,7 @@ export interface NativePathTracerExports {
     vfov: number,
     focusDist: number
   ): void;
+  _pt_set_background_color(r: number, g: number, b: number): void;
   _pt_build_bvh(): number;
   _pt_get_primitive_count(): number;
   _pt_bake(

@@ -96,7 +96,7 @@ async function boot(): Promise<void> {
   viewer.onSlotsRebuilt = () => editor.reapply();
 
   overlay.hide();
-  new DevPanel(viewer);
+  new DevPanel(viewer, cameraRig.camera);
 
   // Boot defaults — the first preset of each manifest (studio IBL + day
   // lights), matching the editor dropdowns' initial selection. Best

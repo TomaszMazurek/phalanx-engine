@@ -1,6 +1,8 @@
 import GUI from 'lil-gui';
+import type * as THREE from 'three';
 import type { MaterialViewer } from '../examples/MaterialViewer';
 import { MeshFactory } from '../render/MeshFactory';
+import { openGroundTruthModal } from '../render/pathtracer';
 
 /**
  * DevPanel — lil-gui controls, zero logic (task 7).
@@ -11,9 +13,11 @@ import { MeshFactory } from '../render/MeshFactory';
 export class DevPanel {
   private readonly gui: GUI;
   private readonly viewer: MaterialViewer;
+  private readonly camera?: THREE.PerspectiveCamera;
 
-  constructor(viewer: MaterialViewer) {
+  constructor(viewer: MaterialViewer, camera?: THREE.PerspectiveCamera) {
     this.viewer = viewer;
+    this.camera = camera;
     this.gui = new GUI({ title: 'Material Viewer' });
     this.build();
   }
@@ -45,6 +49,18 @@ export class DevPanel {
     textures.add(p, 'skybox', v.skyboxIds).onChange((value: string) => v.setSkybox(value));
     textures.add(p, 'repeatU', 1, 8, 1).onChange(() => v.setRepeat(p.repeatU, p.repeatV));
     textures.add(p, 'repeatV', 1, 8, 1).onChange(() => v.setRepeat(p.repeatU, p.repeatV));
+
+    const pathTraceFolder = this.gui.addFolder('Ground-Truth PBR');
+    const ptAction = {
+      render: () => {
+        if (this.camera) {
+          openGroundTruthModal(this.viewer.scene, this.camera);
+        } else {
+          console.warn('[DevPanel] Cannot path trace: camera not provided');
+        }
+      }
+    };
+    pathTraceFolder.add(ptAction, 'render').name('🔬 Path Trace Viewport');
   }
 
   dispose(): void {

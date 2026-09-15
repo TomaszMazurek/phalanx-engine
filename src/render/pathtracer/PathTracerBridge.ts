@@ -18,6 +18,10 @@ export class PathTracerBridge {
     this.wasm._pt_clear_scene();
   }
 
+  public setBackgroundColor(r: number, g: number, b: number): void {
+    this.wasm._pt_set_background_color(r, g, b);
+  }
+
   public addMaterial(params: PbrMaterialParams = {}): number {
     const baseColor = params.baseColor ?? [1.0, 1.0, 1.0];
     const roughness = params.roughness ?? 1.0;
