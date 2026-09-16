@@ -128,69 +128,117 @@ export class LightingContext implements IEditorContext {
   mountInspector(container: HTMLElement, selected: THREE.Object3D | null): void {
     const isLight =
       selected && (selected.type.includes('Light') || selected.name.toLowerCase().includes('light'));
+    const isMesh = selected && (selected.type === 'Mesh' || (selected as THREE.Mesh).isMesh);
 
-    if (!selected || !isLight) {
+    if (isLight && selected) {
+      const light = selected as THREE.Light;
+      const hasDistance = 'distance' in light;
+      const isSpot = light.type.includes('Spot');
+
       container.innerHTML = `
         <div class="inspector-group">
-          <div class="inspector-header">Global Scene Lighting</div>
+          <div class="inspector-header">Light: <strong>${light.name || light.type}</strong></div>
           <div class="inspector-field">
-            <label>Exposure (EV):</label>
-            <input type="range" min="0.1" max="3.0" step="0.1" value="1.0" data-light-prop="exposure" />
+            <label>Type:</label>
+            <span>${light.type}</span>
           </div>
           <div class="inspector-field">
-            <label>Sky Ambient:</label>
-            <input type="range" min="0" max="2" step="0.1" value="0.5" data-light-prop="ambient" />
+            <label>Color:</label>
+            <input type="color" value="#${light.color.getHexString()}" data-light-prop="color" />
           </div>
-        </div>
-        <div class="inspector-empty">
-          <p>Select a light source to adjust its color, intensity, and shadow parameters.</p>
+          <div class="inspector-field">
+            <label>Intensity:</label>
+            <input type="range" min="0" max="1000" step="1" value="${light.intensity}" data-light-prop="intensity" />
+          </div>
+          ${
+            hasDistance
+              ? `<div class="inspector-field">
+                   <label>Range (m):</label>
+                   <input type="number" min="0" max="500" step="1" value="${(light as THREE.PointLight).distance}" data-light-prop="distance" />
+                 </div>`
+              : ''
+          }
+          ${
+            isSpot
+              ? `<div class="inspector-field">
+                   <label>Angle (deg):</label>
+                   <input type="range" min="5" max="90" step="1" value="${Math.round(
+                     ((light as THREE.SpotLight).angle * 180) / Math.PI
+                   )}" data-light-prop="angle" />
+                 </div>`
+              : ''
+          }
+          <div class="inspector-field">
+            <label>Cast Shadows:</label>
+            <input type="checkbox" ${light.castShadow ? 'checked' : ''} data-light-prop="shadow" />
+          </div>
         </div>
       `;
 
-      container.querySelector<HTMLInputElement>('input[data-light-prop="exposure"]')?.addEventListener('input', (e) => {
-        const val = parseFloat((e.target as HTMLInputElement).value);
-        if (this.viewport) this.viewport.setExposure(val);
+      container.querySelectorAll<HTMLInputElement>('input[data-light-prop]').forEach((input) => {
+        input.oninput = () => {
+          const prop = input.dataset.lightProp;
+          if (prop === 'color') {
+            light.color.set(input.value);
+          } else if (prop === 'intensity') {
+            light.intensity = parseFloat(input.value);
+          } else if (prop === 'shadow') {
+            light.castShadow = input.checked;
+          } else if (prop === 'distance' && hasDistance) {
+            (light as THREE.PointLight).distance = parseFloat(input.value) || 0;
+          } else if (prop === 'angle' && isSpot) {
+            (light as THREE.SpotLight).angle = (parseFloat(input.value) * Math.PI) / 180;
+          }
+        };
       });
       return;
     }
 
-    const light = selected as THREE.Light;
+    if (isMesh && selected) {
+      const isStatic = selected.userData?.isStatic !== false && selected.userData?.dynamic !== true;
+      container.innerHTML = `
+        <div class="inspector-group">
+          <div class="inspector-header">Object: <strong>${selected.name || 'Static Mesh'}</strong></div>
+          <div class="inspector-field">
+            <label>Bake Lightmap (Static):</label>
+            <input type="checkbox" ${isStatic ? 'checked' : ''} data-mesh-prop="static" />
+          </div>
+          <div class="inspector-empty">
+            <p>Static objects receive direct light shadows and global illumination baked to material.lightMap.</p>
+          </div>
+        </div>
+      `;
+
+      const staticCheckbox = container.querySelector<HTMLInputElement>('input[data-mesh-prop="static"]');
+      if (staticCheckbox) {
+        staticCheckbox.onchange = () => {
+          selected.userData.isStatic = staticCheckbox.checked;
+          selected.userData.dynamic = !staticCheckbox.checked;
+        };
+      }
+      return;
+    }
 
     container.innerHTML = `
       <div class="inspector-group">
-        <div class="inspector-header">Light: <strong>${light.name || light.type}</strong></div>
+        <div class="inspector-header">Global Scene Lighting</div>
         <div class="inspector-field">
-          <label>Type:</label>
-          <span>${light.type}</span>
+          <label>Exposure (EV):</label>
+          <input type="range" min="0.1" max="3.0" step="0.1" value="1.0" data-light-prop="exposure" />
         </div>
         <div class="inspector-field">
-          <label>Color:</label>
-          <input type="color" value="#${light.color.getHexString()}" data-light-prop="color" />
+          <label>Sky Ambient:</label>
+          <input type="range" min="0" max="2" step="0.1" value="0.5" data-light-prop="ambient" />
         </div>
-        <div class="inspector-field">
-          <label>Intensity:</label>
-          <input type="range" min="0" max="1000" step="10" value="${light.intensity}" data-light-prop="intensity" />
-        </div>
-        <div class="inspector-field">
-          <label>Cast Shadows:</label>
-          <input type="checkbox" ${light.castShadow ? 'checked' : ''} data-light-prop="shadow" />
-        </div>
+      </div>
+      <div class="inspector-empty">
+        <p>Select a light source to adjust its color, intensity, and shadows, or select a mesh to toggle static baking.</p>
       </div>
     `;
 
-    container.querySelectorAll<HTMLInputElement>('input[data-light-prop]').forEach((input) => {
-      input.oninput = () => {
-        const prop = input.dataset.lightProp;
-        if (prop === 'color') {
-          light.color.set(input.value);
-        }
-        if (prop === 'intensity') {
-          light.intensity = parseFloat(input.value);
-        }
-        if (prop === 'shadow') {
-          light.castShadow = input.checked;
-        }
-      };
+    container.querySelector<HTMLInputElement>('input[data-light-prop="exposure"]')?.addEventListener('input', (e) => {
+      const val = parseFloat((e.target as HTMLInputElement).value);
+      if (this.viewport) this.viewport.setExposure(val);
     });
   }
 }

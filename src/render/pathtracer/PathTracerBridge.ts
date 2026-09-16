@@ -18,8 +18,58 @@ export class PathTracerBridge {
     this.wasm._pt_clear_scene();
   }
 
-  public setBackgroundColor(r: number, g: number, b: number): void {
-    this.wasm._pt_set_background_color(r, g, b);
+  public setBackgroundColor(colorOrR: [number, number, number] | number, g?: number, b?: number): void {
+    if (Array.isArray(colorOrR)) {
+      this.wasm._pt_set_background_color(colorOrR[0], colorOrR[1], colorOrR[2]);
+    } else {
+      this.wasm._pt_set_background_color(colorOrR, g ?? 0, b ?? 0);
+    }
+  }
+
+  public addDirectionalLight(
+    dir: [number, number, number],
+    color: [number, number, number] = [1.0, 1.0, 1.0],
+    intensity = 1.0
+  ): void {
+    this.wasm._pt_add_directional_light(
+      dir[0], dir[1], dir[2],
+      color[0], color[1], color[2],
+      intensity
+    );
+  }
+
+  public addPointLight(
+    pos: [number, number, number],
+    color: [number, number, number] = [1.0, 1.0, 1.0],
+    intensity = 1.0,
+    range = 0.0
+  ): void {
+    this.wasm._pt_add_point_light(
+      pos[0], pos[1], pos[2],
+      color[0], color[1], color[2],
+      intensity,
+      range
+    );
+  }
+
+  public addSpotLight(
+    pos: [number, number, number],
+    dir: [number, number, number],
+    color: [number, number, number] = [1.0, 1.0, 1.0],
+    intensity = 1.0,
+    range = 0.0,
+    innerConeRad = 0.0,
+    outerConeRad = Math.PI / 4
+  ): void {
+    this.wasm._pt_add_spot_light(
+      pos[0], pos[1], pos[2],
+      dir[0], dir[1], dir[2],
+      color[0], color[1], color[2],
+      intensity,
+      range,
+      innerConeRad,
+      outerConeRad
+    );
   }
 
   public addMaterial(params: PbrMaterialParams = {}): number {

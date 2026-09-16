@@ -60,4 +60,48 @@ describe('SceneExtractor', () => {
     expect(texture.format).toBe(THREE.RGBAFormat);
     expect(texture.type).toBe(THREE.FloatType);
   });
+
+  it('extracts analytical lights and ambient background from scene hierarchy', () => {
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0.2, 0.3, 0.4);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    dirLight.position.set(0, 10, 0);
+    dirLight.target.position.set(0, 0, 0);
+    scene.add(dirLight);
+    scene.add(dirLight.target);
+
+    const pointLight = new THREE.PointLight(0xff8844, 5.0, 15.0);
+    pointLight.position.set(2, 3, 4);
+    scene.add(pointLight);
+
+    const spotLight = new THREE.SpotLight(0x00ff00, 3.0, 20.0, Math.PI / 3, 0.5);
+    spotLight.position.set(0, 5, 0);
+    spotLight.target.position.set(0, 0, 0);
+    scene.add(spotLight);
+    scene.add(spotLight.target);
+
+    const ambLight = new THREE.AmbientLight(0x111111, 0.5);
+    scene.add(ambLight);
+
+    const result = SceneExtractor.extractLights(scene);
+
+    expect(result.lights.length).toBe(3);
+    expect(result.lights[0].type).toBe('directional');
+    expect(result.lights[0].intensity).toBe(2.0);
+    expect(result.lights[0].direction![1]).toBeCloseTo(-1.0); // pointing downwards
+
+    expect(result.lights[1].type).toBe('point');
+    expect(result.lights[1].position).toEqual([2, 3, 4]);
+    expect(result.lights[1].intensity).toBe(5.0);
+    expect(result.lights[1].range).toBe(15.0);
+
+    expect(result.lights[2].type).toBe('spot');
+    expect(result.lights[2].intensity).toBe(3.0);
+    expect(result.lights[2].range).toBe(20.0);
+    expect(result.lights[2].outerConeAngle).toBeCloseTo(Math.PI / 3);
+
+    expect(result.backgroundColor).toBeDefined();
+    expect(result.backgroundColor![0]).toBeGreaterThan(0.2); // background + ambient
+  });
 });

@@ -78,6 +78,29 @@ export class LightmapBakingService {
     const bridge = await this.getBridge();
     bridge.clearScene();
 
+    // 3.5 Extract and register analytical lights and ambient background
+    const extractedLights = SceneExtractor.extractLights(root);
+    if (extractedLights.backgroundColor) {
+      bridge.setBackgroundColor(extractedLights.backgroundColor);
+    }
+    for (const light of extractedLights.lights) {
+      if (light.type === 'directional' && light.direction) {
+        bridge.addDirectionalLight(light.direction, light.color, light.intensity);
+      } else if (light.type === 'point' && light.position) {
+        bridge.addPointLight(light.position, light.color, light.intensity, light.range ?? 0);
+      } else if (light.type === 'spot' && light.position && light.direction) {
+        bridge.addSpotLight(
+          light.position,
+          light.direction,
+          light.color,
+          light.intensity,
+          light.range ?? 0,
+          light.innerConeAngle ?? 0,
+          light.outerConeAngle ?? Math.PI / 4
+        );
+      }
+    }
+
     let totalTriangles = 0;
 
     // 4. Extract and upload materials & meshes to path tracer
@@ -167,7 +190,9 @@ export class LightmapBakingService {
       obj.type.includes('Helper') ||
       obj.name.includes('Helper') ||
       obj.userData?.isHelper ||
-      obj.userData?.isGizmo
+      obj.userData?.isGizmo ||
+      obj.userData?.isStatic === false ||
+      obj.userData?.dynamic === true
     ) {
       return false;
     }

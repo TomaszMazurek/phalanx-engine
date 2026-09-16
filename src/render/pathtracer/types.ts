@@ -1,5 +1,5 @@
 /**
- * Types and interfaces for Phalanx Path Tracer / Lightmap Baker.
+ * Types and interfaces for Phalanx Path Tracer / Lightmap Baker WebAssembly bridge.
  */
 
 export type BakeType = 'ao' | 'irradiance';
@@ -39,6 +39,22 @@ export interface PbrMaterialParams {
   transmission?: number;
 }
 
+export interface LightParams {
+  type: 'directional' | 'point' | 'spot';
+  color: [number, number, number];
+  intensity: number;
+  direction?: [number, number, number];
+  position?: [number, number, number];
+  range?: number;
+  innerConeAngle?: number;
+  outerConeAngle?: number;
+}
+
+export interface ExtractedLights {
+  lights: LightParams[];
+  backgroundColor?: [number, number, number];
+}
+
 export interface MeshGeometryBuffers {
   positions: Float32Array;
   normals?: Float32Array;
@@ -61,6 +77,27 @@ export interface NativePathTracerExports {
   _pt_alloc(bytes: number): number;
   _pt_free(ptr: number): void;
   _pt_clear_scene(): void;
+  _pt_set_background_color(r: number, g: number, b: number): void;
+  _pt_add_directional_light(
+    dirX: number, dirY: number, dirZ: number,
+    r: number, g: number, b: number,
+    intensity: number
+  ): void;
+  _pt_add_point_light(
+    posX: number, posY: number, posZ: number,
+    r: number, g: number, b: number,
+    intensity: number,
+    range: number
+  ): void;
+  _pt_add_spot_light(
+    posX: number, posY: number, posZ: number,
+    dirX: number, dirY: number, dirZ: number,
+    r: number, g: number, b: number,
+    intensity: number,
+    range: number,
+    innerRad: number,
+    outerRad: number
+  ): void;
   _pt_add_material(
     r: number, g: number, b: number,
     roughness: number,
@@ -85,7 +122,6 @@ export interface NativePathTracerExports {
     vfov: number,
     focusDist: number
   ): void;
-  _pt_set_background_color(r: number, g: number, b: number): void;
   _pt_build_bvh(): number;
   _pt_get_primitive_count(): number;
   _pt_bake(

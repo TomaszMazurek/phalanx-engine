@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { BakeResult, MeshGeometryBuffers, PbrMaterialParams } from './types';
+import type { BakeResult, ExtractedLights, LightParams, MeshGeometryBuffers, PbrMaterialParams } from './types';
 
 export class SceneExtractor {
   /**
@@ -125,5 +125,101 @@ export class SceneExtractor {
     texture.minFilter = THREE.LinearFilter;
     texture.needsUpdate = true;
     return texture;
+  }
+
+  /**
+   * Extracts analytical lights (Directional, Point, Spot) and ambient/sky background from a Three.js scene hierarchy.
+   */
+  public static extractLights(root: THREE.Object3D): ExtractedLights {
+    const lights: LightParams[] = [];
+    let bgR = 0.05;
+    let bgG = 0.05;
+    let bgB = 0.08;
+    let hasExplicitBg = false;
+
+    if (root instanceof THREE.Scene && root.background instanceof THREE.Color) {
+      bgR = root.background.r;
+      bgG = root.background.g;
+      bgB = root.background.b;
+      hasExplicitBg = true;
+    }
+
+    const lightPos = new THREE.Vector3();
+    const targetPos = new THREE.Vector3();
+    const dir = new THREE.Vector3();
+
+    root.traverse((obj) => {
+      if (obj instanceof THREE.DirectionalLight) {
+        obj.updateMatrixWorld(true);
+        obj.getWorldPosition(lightPos);
+        if (obj.target) {
+          obj.target.updateMatrixWorld(true);
+          obj.target.getWorldPosition(targetPos);
+          dir.subVectors(targetPos, lightPos).normalize();
+        } else {
+          dir.set(0, -1, 0);
+        }
+
+        lights.push({
+          type: 'directional',
+          direction: [dir.x, dir.y, dir.z],
+          color: [obj.color.r, obj.color.g, obj.color.b],
+          intensity: obj.intensity
+        });
+      } else if (obj instanceof THREE.SpotLight) {
+        obj.updateMatrixWorld(true);
+        obj.getWorldPosition(lightPos);
+        if (obj.target) {
+          obj.target.updateMatrixWorld(true);
+          obj.target.getWorldPosition(targetPos);
+          dir.subVectors(targetPos, lightPos).normalize();
+        } else {
+          dir.set(0, -1, 0);
+        }
+
+        const innerCone = obj.angle * (1.0 - obj.penumbra);
+        lights.push({
+          type: 'spot',
+          position: [lightPos.x, lightPos.y, lightPos.z],
+          direction: [dir.x, dir.y, dir.z],
+          color: [obj.color.r, obj.color.g, obj.color.b],
+          intensity: obj.intensity,
+          range: obj.distance > 0 ? obj.distance : 0,
+          innerConeAngle: innerCone,
+          outerConeAngle: obj.angle
+        });
+      } else if (obj instanceof THREE.PointLight) {
+        obj.updateMatrixWorld(true);
+        obj.getWorldPosition(lightPos);
+
+        lights.push({
+          type: 'point',
+          position: [lightPos.x, lightPos.y, lightPos.z],
+          color: [obj.color.r, obj.color.g, obj.color.b],
+          intensity: obj.intensity,
+          range: obj.distance > 0 ? obj.distance : 0
+        });
+      } else if (obj instanceof THREE.AmbientLight || obj instanceof THREE.HemisphereLight) {
+        const amb = obj as THREE.AmbientLight;
+        const addR = amb.color.r * amb.intensity;
+        const addG = amb.color.g * amb.intensity;
+        const addB = amb.color.b * amb.intensity;
+        if (!hasExplicitBg) {
+          bgR = addR;
+          bgG = addG;
+          bgB = addB;
+          hasExplicitBg = true;
+        } else {
+          bgR += addR;
+          bgG += addG;
+          bgB += addB;
+        }
+      }
+    });
+
+    return {
+      lights,
+      backgroundColor: [bgR, bgG, bgB]
+    };
   }
 }
