@@ -196,6 +196,11 @@ V1 celowo prymitywna; to ona wyznaca scope Faz 4–6 (fizyka odkładana, UI/audi
 (S0: 30 sekund frajdy → S1: TD → S2: CTF/pościg → S3: wernisaż). Od tagu `phase-3`
 kierownicem projektu jest GRA, nie lista faz silnika.
 
+**Pomysł na kolejną grę — Tactical Encounter** (inspiracja: F.E.A.R.):
+[games/GAME-CONCEPT-tactical-encounter.md](./games/GAME-CONCEPT-tactical-encounter.md)
+— taktyczny FPS z inteligentnym oddziałem, dynamiczną reakcją otoczenia i naciskiem na gunfeel.
+**Status: BACKLOG / KONCEPT, bez zmiany priorytetów aktywnej Gry 1.**
+
 ---
 
 ## Faza 4 — Fizyka i interakcja (~1 tydzień)
